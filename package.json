@@ -1,0 +1,29 @@
+{
+  "name": "nine-mens-morris",
+  "version": "1.0.0",
+  "description": "A browser implementation of the game Nine Mens Morris for the IT-talents.de code competition Oct 2017 in Cooperation with adesso AG",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --open"
+  },
+  "keywords": [
+    "nine",
+    "mens",
+    "morris"
+  ],
+  "author": "Benedikt Christoph Wolters",
+  "license": "MIT",
+  "dependencies": {
+    "fabric-webpack": "^1.6.0-rc.1",
+    "webpack-dev-server": "^2.9.1"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "clean-webpack-plugin": "^0.1.17",
+    "html-webpack-plugin": "^2.30.1",
+    "webpack": "^3.6.0"
+  }
+}
