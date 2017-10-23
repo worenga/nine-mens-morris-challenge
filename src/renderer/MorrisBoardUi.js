@@ -6,7 +6,7 @@ export class MorrisBoardUi extends EventEmitter {
   constructor(canvas_element, settings = {}) {
     super();
 
-		let _settings = Object.assign({
+		const _settings = Object.assign({
 			totalHeight:720,
 		  totalWidth:600,
 			paddingTop:60,
@@ -15,6 +15,7 @@ export class MorrisBoardUi extends EventEmitter {
 			paddingBottom:60,
 			onStoneMove: (from,to) => {}
 		},settings);
+
 
     this.canvas = new fabric.Canvas(canvas_element, {selection: false});
 		this.onStoneMove = _settings.onStoneMove;
@@ -54,7 +55,12 @@ export class MorrisBoardUi extends EventEmitter {
     });
 
     let outerRectangle = fabric.util.object.clone(rectangleProto);
-    outerRectangle.set({left: this.paddingLeft, top: this.paddingTop, width: this.boardWidth, height: this.boardHeight});
+    outerRectangle.set(
+      {left: this.paddingLeft,
+        top: this.paddingTop,
+      width: this.boardWidth,
+      height: this.boardHeight}
+    );
     this.canvas.add(outerRectangle);
 
     let innerRectangle1 = fabric.util.object.clone(rectangleProto);
@@ -139,16 +145,6 @@ export class MorrisBoardUi extends EventEmitter {
       selectable: false
     };
 
-    const removalCircleParams = {
-      strokeWidth: 4,
-      radius: 10,
-      stroke: 'rgba(255,0,0,0.8)',
-      fill: 'rgba(0,0,0,0)', //transparent
-      originX: 'center',
-      originY: 'center',
-      selectable: true
-    };
-
     this.hintCircles = new fabric.Group();
     this.hintCircles.setOpacity(0.0);
 
@@ -199,42 +195,7 @@ export class MorrisBoardUi extends EventEmitter {
         hintCircle.positionIndex = level * 8 + i;
         this.hintCircles.add(hintCircle);
 
-        let removalCircle = new fabric.Circle(Object.assign({
-          left: circlePositions[i][0],
-          top:  circlePositions[i][1],
-        }, removalCircleParams));
-
-        const offset = 8;
-        let removalLineX1 = new fabric.Line([
-          circlePositions[i][0]-offset,
-          circlePositions[i][1]-offset,
-          circlePositions[i][0]+offset,
-          circlePositions[i][1]+offset
-        ], {
-          originX: 'center',
-          originY: 'center',
-          stroke: 'rgba(255,0,0,0.8)',
-          strokeWidth: strokeWidth,
-        });
-
-        let removalLineX2 = new fabric.Line([
-          circlePositions[i][0]+offset,
-          circlePositions[i][1]-offset,
-          circlePositions[i][0]-offset,
-          circlePositions[i][1]+offset
-        ], {
-          originX: 'center',
-          originY: 'center',
-          stroke: 'rgba(255,0,0,0.8)',
-          strokeWidth: strokeWidth,
-        });
-
-        let removableSign = new fabric.Group([removalCircle,removalLineX2,removalLineX1], {
-          hasControls: false,
-          hasBorders: false,
-          lockMovementX : true,
-          lockMovementY : true
-        });
+        let removableSign = this._createRemovalSign(circlePositions[i]);
         removableSign.positionIndex = level * 8 + i;
         this.removalIndicators.push(removableSign);
       }
@@ -259,13 +220,111 @@ export class MorrisBoardUi extends EventEmitter {
       }
     });
   }
+
+  _createRemovalSign(position,offset=8)
+  {
+    const removalCircleParams = {
+      strokeWidth: 4,
+      radius: 10,
+      stroke: 'rgba(255,0,0,0.8)',
+      fill: 'rgba(0,0,0,0)', //transparent
+      originX: 'center',
+      originY: 'center',
+      selectable: true
+    };
+
+    let removalCircle = new fabric.Circle(Object.assign({
+      left: position[0],
+      top:  position[1],
+    }, removalCircleParams));
+
+    let removalLineX1 = new fabric.Line([
+      position[0]-offset,
+      position[1]-offset,
+      position[0]+offset,
+      position[1]+offset
+    ], {
+      originX: 'center',
+      originY: 'center',
+      stroke: 'rgba(255,0,0,0.8)',
+      strokeWidth: 4,
+    });
+
+    let removalLineX2 = new fabric.Line([
+      position[0]+offset,
+      position[1]-offset,
+      position[0]-offset,
+      position[1]+offset
+    ], {
+      originX: 'center',
+      originY: 'center',
+      stroke: 'rgba(255,0,0,0.8)',
+      strokeWidth: 4,
+    });
+
+    let removableSign = new fabric.Group([removalCircle,removalLineX2,removalLineX1], {
+      hasControls: false,
+      hasBorders: false,
+      lockMovementX : true,
+      lockMovementY : true
+    });
+    return removableSign;
+  }
+
+  _setStones(target, placedStones,numRemoved)
+  {
+    this.canvas.remove(...target);
+    let idx = 0;
+    for(;idx<placedStones.length;idx++)
+    {
+      target[idx].isRemoved = false;
+      target[idx].currentPositionIndex = placedStones[idx];
+      this.canvas.add(target[idx]);
+    }
+    for(;idx<9;idx++)
+    {
+      target[idx].isRemoved = (idx - placedStones.length) < numRemoved;
+      target[idx].currentPositionIndex = null;
+      if( !target[idx].isRemoved )
+      {
+        this.canvas.add(target[idx]);
+      }
+    }
+  }
+
+  setStones(placedWhiteStones, placedBlackStones, numRemovedStonesWhite, numRemovedStonesBlack)
+  {
+    this._setStones(this.whiteStones,placedWhiteStones,numRemovedStonesWhite);
+    this._setStones(this.blackStones,placedBlackStones,numRemovedStonesBlack);
+    //this._alignFreeStonePositions();
+    this._alignPlacedStonesPositions();
+  }
+
+  _alignPlacedStonesPositions()
+  {
+    for(let stone of this.whiteStones.concat(this.blackStones))
+    {
+      stone.hoverObject = null;
+      if(stone.currentPositionIndex !== null)
+      {
+          stone.set({'top': this.hintCircles.item(stone.currentPositionIndex).top,
+                     'left': this.hintCircles.item(stone.currentPositionIndex).left}).setCoords();
+      }
+    }
+
+  }
+
   _setupStones() {
 
     this.whiteStones = [];
     this.blackStones = [];
 
     for (let i = 0; i < 9; i++) {
-      let whiteStone = new fabric.Circle({originX: 'center', originY: 'center', radius: 14}); //TODO
+      let whiteStone = new fabric.Circle({
+        originX: 'center',
+        originY: 'center',
+        radius: 14 //TODO
+      });
       whiteStone.setGradient('fill', {
         type: 'radial',
         r1: 50,
@@ -285,7 +344,6 @@ export class MorrisBoardUi extends EventEmitter {
       whiteStone.isRemoved = false;
       whiteStone.player = 0;
       this.whiteStones.push(whiteStone);
-      //this.canvas.add(whiteStone);
 
       let blackStone = new fabric.Circle({originX: 'center', originY: 'center', radius: 14}); //TODO
       blackStone.setGradient('fill', {
@@ -305,13 +363,12 @@ export class MorrisBoardUi extends EventEmitter {
       blackStone.isRemoved = false;
       blackStone.player = 1;
       this.blackStones.push(blackStone);
-      //this.canvas.add(blackStone);
     }
 
     this.canvas.add(...this.whiteStones);
     this.canvas.add(...this.blackStones);
 
-    this._setStonePositions();
+    this._alignFreeStonePositions();
 
 		let _this = this;
 
@@ -328,7 +385,7 @@ export class MorrisBoardUi extends EventEmitter {
       {
         stone.wasMovingFired = true;
         _this.hintCircles.setOpacity(1.0);
-        this.raise('stone:begin_move',stone.player,stone.currentPositionIndex);
+        this.triggerEvent('stone:begin_move',stone.player,stone.currentPositionIndex);
       }
 
       stone.setOpacity(0.7);
@@ -354,35 +411,39 @@ export class MorrisBoardUi extends EventEmitter {
 		});
 
     this.canvas.on('object:selected', (e) => {
-      let stone = e.target;
-      if(this.removalIndicators.indexOf(stone) === -1)
+      let clickedRemovalIndicator = e.target;
+      if(this.removalIndicators.indexOf(clickedRemovalIndicator) === -1)
       {
         return;
       }
 
-      if(this.raise('stone:remove',stone.positionIndex))
+      if(this.triggerEvent('stone:remove',clickedRemovalIndicator.positionIndex))
       {
-        //Remove Stone:
+
         for(let stoneId = 0; stoneId < 9; stoneId++)
         {
-          if(this.whiteStones[stoneId].currentPositionIndex == stone.positionIndex)
+
+          if(this.whiteStones[stoneId].currentPositionIndex === clickedRemovalIndicator.positionIndex)
           {
+
             this.whiteStones[stoneId].isRemoved = true;
             this.canvas.remove(this.whiteStones[stoneId]);
             break;
+
           }
-          if(this.blackStones[stoneId].currentPositionIndex == stone.positionIndex)
+
+          if(this.blackStones[stoneId].currentPositionIndex === clickedRemovalIndicator.positionIndex)
           {
             this.blackStones[stoneId].isRemoved = true;
             this.canvas.remove(this.blackStones[stoneId]);
             break;
           }
+
         }
-        this.removalIndicators.forEach(
-          (obj)=>{
+
+        this.removalIndicators.forEach( (obj) => {
             this.canvas.remove(obj);
-          }
-        );
+        });
       }
 
     });
@@ -403,25 +464,21 @@ export class MorrisBoardUi extends EventEmitter {
 				onChange: _this.canvas.renderAll.bind(_this.canvas)
 			});
 			stone.setOpacity(1);
-      if ((stone.player === 0 || stone.player === 1) &&
-           stone.hoverObject !== null &&
-           stone.hoverObject.positionIndex !== undefined &&
-           this.raise("stone:moved", stone.player, stone.currentPositionIndex, stone.hoverObject.positionIndex))
+      if ((stone.player !== 0 && stone.player !== 1) ||
+           stone.hoverObject === null ||
+           stone.hoverObject.positionIndex === undefined ||
+           !this.triggerEvent("stone:moved", stone.player, stone.currentPositionIndex, stone.hoverObject.positionIndex))
       {
-				stone.currentPositionIndex = stone.hoverObject.positionIndex;
-				stone.set({'top': stone.hoverObject.top, 'left': stone.hoverObject.left}).setCoords();
-			} else {
-				if (stone.currentPositionIndex !== null) {
-					_this.hintCircles.forEachObject((obj) => {
-						if (obj.positionIndex === stone.currentPositionIndex) {
-							stone.set({'top': obj.top, 'left': obj.left}).setCoords();
-
-						}
-					});
-				}
+        if (stone.currentPositionIndex !== null) {
+          _this.hintCircles.forEachObject((obj) => {
+            if (obj.positionIndex === stone.currentPositionIndex) {
+              stone.set({'top': obj.top, 'left': obj.left}).setCoords();
+            }
+          });
+        }
 			}
-			_this._setStonePositions();
 
+      this._alignFreeStonePositions();
 			//_this.hintCircles.setOpacity(0.0);
 			_this.hintCircles.animate('opacity', 0.0);
 		});
@@ -429,7 +486,7 @@ export class MorrisBoardUi extends EventEmitter {
 
   }
 
-  _setStonePositions()
+  _alignFreeStonePositions()
   {
     let atTop = 0;
     const stoneOffset = 20;
@@ -437,7 +494,7 @@ export class MorrisBoardUi extends EventEmitter {
     //Adjust White Stones
     for (let i = 0; i < 9; i++) {
       let curItem = this.whiteStones[i];
-      if (curItem.isRemoved === true || curItem.currentPositionIndex === null) {
+      if (curItem.isRemoved !== true && curItem.currentPositionIndex === null) {
         curItem.set({
           'top': this.paddingTop / 2,
           'left': this.paddingLeft + atTop * stoneOffset
@@ -451,7 +508,7 @@ export class MorrisBoardUi extends EventEmitter {
     //Adjust Black Stones
     for (let i = 0; i < 9; i++) {
       let curItem = this.blackStones[i];
-      if (curItem.isRemoved === true || curItem.currentPositionIndex === null) {
+      if (curItem.isRemoved !== true && curItem.currentPositionIndex === null) {
         curItem.set({
           'top': this.paddingTop / 2,
           'left': this.paddingLeft + this.boardWidth - atTop * stoneOffset
@@ -494,12 +551,6 @@ export class MorrisBoardUi extends EventEmitter {
 
     if(turn === MorrisBoardUi.WHITE_REMOVE || turn === MorrisBoardUi.BLACK_REMOVE)
     {
-      /*let _this = this;
-      this.removalIndicators.animate('opacity', 1, {
-        onChange: _this.canvas.renderAll.bind(_this.canvas)
-      });*/
-      //this.removalIndicators
-      //this.removalIndicators.setOpacity(1.0);
       this.removalIndicators.forEach((group) => {
         if(this.activeRemovalIndicators.indexOf(group.positionIndex) !== -1)
         {

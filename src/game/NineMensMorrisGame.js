@@ -8,7 +8,8 @@ export class MorrisGame extends EventEmitter {
 	constructor(stones = [0,0], removedStones = [0,0])
 	{
 		super();
-		this.millBitmasks = [
+
+		this.millBitmasks = Object.freeze([
 			(1 << 0) | (1 << 1) | (1 << 2),
 			(1 << 8) | (1 << 9) | (1 << 10),
 			(1 << 16) | (1 << 17) | (1 << 18),
@@ -25,7 +26,8 @@ export class MorrisGame extends EventEmitter {
 			(1 << 18) | (1 << 19) | (1 << 20),
 			(1 << 10) | (1 << 11) | (1 << 12),
 			(1 << 2) | (1 << 3) | (1 << 4)
-		];
+		]);
+
 
 		/*
 		  Data structure for our mill game:
@@ -57,24 +59,29 @@ export class MorrisGame extends EventEmitter {
 		this.moves = [];
 	}
 
-	  static get white() { return 0; }
-	  static get black() { return 1; }
-	  static get phase1() { return 1; }
-	  static get phase2() { return 2; }
-	  static get phase3() { return 3; }
+  static get PLAYER_WHITE() { return 0; }
+  static get PLAYER_BLACK() { return 1; }
+  static get PHASE1() { return 1; }
+  static get PHASE2() { return 2; }
+  static get PHASE3() { return 3; }
 
-	getClosedMillsIndices(player)
+	getClosedMillsIndicesForStones(stones)
 	{
 		let foundMills = [];
 		for(let millIndex = 0; millIndex < this.millBitmasks.length; millIndex++)
 		{
 			const currentMillMask = this.millBitmasks[millIndex];
-			if((this.stones[player] & currentMillMask) === currentMillMask)
+			if((stones & currentMillMask) === currentMillMask)
 			{
 				foundMills.push(millIndex);
 			}
 		}
 		return foundMills;
+	}
+
+	getClosedMillsIndicesForPlayer(player)
+	{
+		return this.getClosedMillsIndicesForStones(this.stones[player]);
 	}
 
 	isPartOfMill(position,player)
@@ -102,21 +109,19 @@ export class MorrisGame extends EventEmitter {
 			return false;
 		}
 
-		if (from === to) {
+		if (from === to || from > 23 || from < 0 || to > 23 || to < 0) {
 	    return false;
 	  }
 
-		if(from === null && this.getPhaseForPlayer(player) !== MorrisGame.phase1)
+		if(from === null && this.getPhaseForPlayer(player) !== MorrisGame.PHASE1)
 		{
 			return false;
 		}
-
-		if(from !== null && this.getPhaseForPlayer(player) === MorrisGame.phase1)
+		if(from !== null && this.getPhaseForPlayer(player) === MorrisGame.PHASE1)
 		{
 			return false;
 		}
-
-		if(from !== null && (this.stones[player] >> from) & 1 !== 1)
+		if(from !== null && ((this.stones[player] >> from) & 1) !== 1)
 		{
 			return false;
 		}
@@ -128,7 +133,7 @@ export class MorrisGame extends EventEmitter {
 			return false;
 		}
 
-		if(this.getPhaseForPlayer(player) === MorrisGame.phase2)
+		if(this.getPhaseForPlayer(player) === MorrisGame.PHASE2)
 		{
 			//Each node has at least two adjacent neighbors at the ring:
 			const fromRing = Math.floor(from / 8);
@@ -167,17 +172,54 @@ export class MorrisGame extends EventEmitter {
 		return true;
 	}
 
-	applyMove(player,from,to)
+	createAndApplyMove(player,from,to,removedPiece=null)
 	{
 		if(this.playerAllowedToMove(player,from,to))
 		{
-			let move = new NineMensMorrisMove(player,to,from);
+			let move = new NineMensMorrisMove(player,to,from,removedPiece);
 			this._persistsMoveUnsafe(move);
 			return true;
 		}else{
 			return false;
 		}
 	}
+
+	applyMove(move)
+	{
+		if(this.playerAllowedToMove(move.player,move.from,move.to))
+		{
+			const requiresRemoval = this.moveRequiresRemoval(move.player,move.from,move.to);
+
+			if(requiresRemoval)
+			{
+				if(this.getRemovablePiecesForPlayer(move.player).indexOf(move.removedPiece) === -1)
+				{
+					//Cannot remove this peace or has no removable piece.
+					return false;
+				}
+			}
+			this._persistsMoveUnsafe(move);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	getPositionsForPlayer(player)
+	{
+		let positionsIndices = [];
+		for(let i=0;i<24;i++)
+		{
+			if(((this.stones[player] >> i) & 1) === 1 )
+			{
+				positionsIndices.push(i);
+			}
+		}
+		return positionsIndices;
+	}
+
 
 	_getMillHash(millIndices){
 		let hash = 0;
@@ -188,52 +230,71 @@ export class MorrisGame extends EventEmitter {
 		return hash;
 	}
 
-	_newMillClosed(previousMillHash,currentHash)
+	_newMillClosed(beforeMoveHash,afterMoveHash)
 	{
-		console.log(previousMillHash ^ currentHash,previousMillHash,currentHash);
-		return ((previousMillHash ^ currentHash) !== 0) && bitCount(currentHash) >= bitCount(previousMillHash);
+		return ((beforeMoveHash ^ afterMoveHash) !== 0) &&
+						bitCount(afterMoveHash) >= bitCount(beforeMoveHash);
+	}
+
+	moveRequiresRemoval(player,from,to)
+	{
+		const beforeMove = this._getMillHash(this.getClosedMillsIndicesForPlayer(player));
+
+		let tmp = this.stones[player];
+		//Perform move on tmp:
+		if(from !== null)
+		{
+			tmp &= ~(1 << from);
+		}
+		tmp |= (1 << to);
+
+		const afterTmpMove = this._getMillHash(this.getClosedMillsIndicesForStones(tmp));
+
+		return this._newMillClosed(beforeMove,afterTmpMove);
 	}
 
 	_persistsMoveUnsafe(move)
 	{
-		console.log("closed mills1",this.getClosedMillsIndices(move.player));
-		const previousMillHash = this._getMillHash(this.getClosedMillsIndices(move.player));
+		const millHashBeforeMove = this._getMillHash(this.getClosedMillsIndicesForPlayer(move.player));
 
-		if(move.oldPosition !== null)
+		if(move.from !== null)
 		{
-			this.stones[move.player] &= ~(1 << move.oldPosition);
+			this.stones[move.player] &= ~(1 << move.from);
 		}
-		this.stones[move.player] |= (1 << move.newPosition);
+		this.stones[move.player] |= (1 << move.to);
 
 		this.moves.push(move);
 
-		console.log("closed mills2",this.getClosedMillsIndices(move.player));
-		const currentMillHash = this._getMillHash(this.getClosedMillsIndices(move.player));
+		const millHashAfterMove = this._getMillHash(this.getClosedMillsIndicesForPlayer(move.player));
+
+		this.triggerEvent('boardstate:changed');
 
 		//TODO: Encapsulate internal state.
-		if(this._newMillClosed(previousMillHash,currentMillHash) && move.removedPiece === null)
+		if(this._newMillClosed(millHashBeforeMove,millHashAfterMove) && move.removedPiece === null)
 		{
-			this.raise('move:removal_required', move.player);
-		}else{
+			this.triggerEvent('move:removal_required', move.player);
+		}
+		else
+		{
 			this._proceedOrEndGame();
 		}
 	}
 
 	_proceedOrEndGame()
 	{
-		const whiteWon = this.hasWon(0);
-		const blackWon = this.hasWon(1);
+		const whiteWon = this.hasWon(MorrisGame.PLAYER_WHITE);
+		const blackWon = this.hasWon(MorrisGame.PLAYER_BLACK);
 		if(this.isDraw())
 		{
-			this.raise('game:ended', true, undefined);
+			this.triggerEvent('game:ended', true, undefined);
 		}
 		else if(whiteWon || blackWon)
 		{
-			this.raise('game:ended', false, whiteWon ? 0 : 1);
+			this.triggerEvent('game:ended', false, whiteWon ? MorrisGame.PLAYER_WHITE : MorrisGame.PLAYER_BLACK);
 		}
 		else
 		{
-			this.raise('move:move_required', this.currentTurn);
+			this.triggerEvent('move:move_required', this.currentTurn);
 		}
 	}
 
@@ -248,11 +309,18 @@ export class MorrisGame extends EventEmitter {
 		this.stones[opponent] &= ~(1 << position);
 		this.removedStones[opponent] += 1;
 
+		this.triggerEvent("boardstate:changed");
 		this._proceedOrEndGame();
 	}
 
-	posToHumanReadable(pos)
+	getRemovedStonesForPlayer(player)
 	{
+		return this.removedStones[player];
+	}
+
+	encodePosToHumanReadable(pos)
+	{
+		//TODO: write this function and vice versa
 		/*
 		0, 7, 6 -> a
 		8, 15, 14 -> b
@@ -276,50 +344,17 @@ export class MorrisGame extends EventEmitter {
 	}
 
 
-	positionRemoveableForPlayer(pos,player)
-	{
-		const opponent = 1 - player;
-
-		if( ((this.stones[player] >> pos) & 1) | (((this.stones[opponent] >> pos) & 1) === 0) )
-		{
-			//If there is no stone or player has occupied the place herself,
-			//there is nothing to be removed
-			return false;
-		} else {
-			return true;
-		}
-
-		//TODO check mills
-
-	}
-
-
-	isFinalConfiguration()
-	{
-		if ( bitCount(this.stones[ MorrisGame.white]) < 3 )
-		{
-		   return MorrisGame.black;
-		}
-		else if ( bitCount(this.stones[MorrisGame.black]) < 3 )
-		{
-			return MorrisGame.white;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
 	isDraw()
 	{
-		return (this.playerCanMove(MorrisGame.white) === false &&
-					  this.playerCanMove(MorrisGame.black) === false );
+		return (this.playerCanMove(MorrisGame.PLAYER_WHITE) === false &&
+					  this.playerCanMove(MorrisGame.PLAYER_BLACK) === false );
 	}
 
 	hasWon(player)
 	{
 		const opponent = 1 - player;
-		return this.removedStones[opponent] > 7 || this.playerCanMove(opponent) === false;
+		return (this.removedStones[opponent] > 6 ||
+					  this.playerCanMove(opponent) === false );
 	}
 
 	getRemovablePiecesForPlayer(player)
@@ -350,124 +385,121 @@ export class MorrisGame extends EventEmitter {
 		return removablePositions;
 	}
 
-	getNumberOfMills(player)
+	getNumberOfClosedMillsForPlayer(player)
 	{
-		let numberOfMills = 0;
-		for(let level=0;level<2;level++)
-		{
-			const levelOffset = level*8;
-			const offsetted = this.stones[player] >> level*8;
-			numberOfMills += (offsetted & 0x11) === 0x11;
-			numberOfMills += (offsetted & 0b11100) === 0b11100;
-			numberOfMills += (offsetted & 0b11100000) === 0b11100000;
-			numberOfMills += (offsetted & 0b11000001) === 0b11000001;
-		}
-
-		for(let rotation=0;rotation<8;rotation+=2)
-		{
-			const mask = (1 << 1+rotation | 1 << 9+rotation | 1 << 17+rotation);
-			numberOfMills += this.stones[player] & mask === mask;
-		}
-
-		return numberOfMills;
+		return this.getClosedMillsIndicesForPlayer(player).length;
 	}
-
-
 
 	playerCanMove(player)
 	{
 		const phase = this.getPhaseForPlayer(player);
 
 		//If we are in Phase 1, it is clear that every player can move.
-		if( phase === MorrisGame.phase1)
+		if( phase === MorrisGame.PHASE1)
 		{
 			return true;
-		}else{
-
+		}
+		else if(phase === MorrisGame.PHASE2)
+		{
 			//We are in Phase 2 or 3, i.e. check to find any position that the player
 			//is able to move without violating the constraints of the game
 			const freePositions = ~(this.stones[0] | this.stones[1]);
 
-			for(let level=0;level<2;level++)
+			for ( let level=0; level < 2; level++ )
 			{
-				for(let ringPos=0;ringPos<8;ringPos++)
+				for ( let ringPos = 0; ringPos < 8; ringPos++ )
 				{
-					const idx = level*8+ringPos;
-					if((freePositions >> idx) & 1)
+					if(this._canBeMovedTo(freePositions,level,ringPos, player))
 					{
-						//Place is not occupied. Check neighboring ring nodes.
-						//Each node has at least two adjacent neighbors at the ring:
-						const ringPosLeft  = level * 8 + (ringPos + 1 ) % 8;
-						const ringPosRight = level * 8 + negMod((ringPos - 1 ),8);
+						return true;
+					}
+				}
+			}
+		}
+		else if(phase === MorrisGame.PHASE3)
+		{
+			//Player can always move in Phase 3 there are not sufficient stones
+			//to occupy all free positions:
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 
-						if((this.stones[player] >> ringPosLeft)  & 1 ||
-						   (this.stones[player] >> ringPosRight) & 1  )
-						{
-							return true;
-						}
 
-						if(ringPos % 2)
-						{
-							// We furthmore need to check some
-							// other positions outside of the current 'ring' from the other levels
-							const upperLevelPos = ( level + 1 ) * 8 + ringPos;
-							const lowerLevelPos = ( level - 1 ) * 8 + ringPos;
+	_canBeMovedTo(freePositions,level,ringPos,player)
+	{
+		const idx = level * 8 + ringPos;
+		if( (freePositions >> idx) & 1 )
+		{
+			//Place is not occupied. Check neighboring ring nodes.
 
-							if(upperLevelPos < 24)
-							{
-								if((this.stones[player] >> upperLevelPos) & 1)
-								{
-									return true;
-								}
-							}
-							if(lowerLevelPos >= 0) //Note
-							{
-								if((this.stones[player] >> lowerLevelPos) & 1)
-								{
-									return true;
-								}
-							}
-						}
+			//Each node has at least two adjacent neighbors at its own ring:
+			const ringPosLeft  = level * 8 + (ringPos + 1 ) % 8;
+			const ringPosRight = level * 8 + negMod(ringPos - 1 ,8);
 
+			if( ( this.stones[player] >> ringPosLeft )  & 1 ||
+					( this.stones[player] >> ringPosRight ) & 1  )
+			{
+				return true;
+			}
+
+			if( ringPos % 2 )
+			{
+				//We are at an intersection with either 3 or 4 neighbors:
+				//We need to check additional neighbors outside of current ring
+				const upperLevelPos = ( level + 1 ) * 8 + ringPos;
+				const lowerLevelPos = ( level - 1 ) * 8 + ringPos;
+
+				if( upperLevelPos < 24 )
+				{
+					if( ( this.stones[player] >> upperLevelPos ) & 1 )
+					{
+						return true;
+					}
+				}
+
+				if(lowerLevelPos >= 0) //Note
+				{
+					if( (this.stones[player] >> lowerLevelPos) & 1 )
+					{
+						return true;
 					}
 				}
 			}
 		}
 		return false;
-
 	}
-
 
 
 	getPhaseForPlayer(player)
 	{
-		//assert(player === MorrisGame.white || player === MorrisGame.black);
-
 		const amountStones = bitCount(this.stones[player]);
+
 		if (amountStones+this.removedStones[player] < 9)
 		{
-			console.log('p1',player);
-			return MorrisGame.phase1;
+			return MorrisGame.PHASE1;
 		}
 		else if(amountStones > 3 && this.removedStones[player] < 6)
 		{
-			console.log('p2',player,amountStones - this.removedStones[player]);
-			return MorrisGame.phase2;
+			return MorrisGame.PHASE2;
 		}
 		else
 		{
-			console.log('p3',player,amountStones - this.removedStones[player]);
-			return MorrisGame.phase3;
+			return MorrisGame.PHASE3;
 		}
+
 	}
 
 	get currentTurn()
 	{
 		if( this.moves.length % 2 == 0 )
 		{
-			return MorrisGame.white;
+			return MorrisGame.PLAYER_WHITE;
 		} else {
-			return MorrisGame.black;
+			return MorrisGame.PLAYER_BLACK;
 		}
 	}
 

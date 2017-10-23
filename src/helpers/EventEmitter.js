@@ -14,7 +14,7 @@ on(eventName, callback)
     this.events[ eventName ].push( callback );
 }
 
-raise(eventName, ...args)
+triggerEvent(eventName, ...args)
 {
     let callbacks = this.events[eventName];
 

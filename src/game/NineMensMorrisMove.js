@@ -1,10 +1,10 @@
 export class NineMensMorrisMove
 {
-  constructor(player,newPosition,oldPosition=null,removedPiece=null)
+  constructor(player,to,from=null,removedPiece=null)
   {
     this.player = player;
-    this.newPosition = newPosition;
-    this.oldPosition = oldPosition;
+    this.from = from;
+    this.to = to;
     this.removedPiece = removedPiece;
   }
 }

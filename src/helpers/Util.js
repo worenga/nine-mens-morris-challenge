@@ -10,4 +10,8 @@ let negMod = (n, m) => {
 	};
 
 
-export {negMod, bitCount};
+let getRandomInt = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+export {negMod, bitCount, getRandomInt};
