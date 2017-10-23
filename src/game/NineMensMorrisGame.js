@@ -4,39 +4,23 @@ import {negMod, bitCount} from '../helpers/Util.js';
 
 export class MorrisGame extends EventEmitter {
 
-
 	constructor(stones = [0,0], removedStones = [0,0])
 	{
 		super();
 
-		this.millBitmasks = Object.freeze([
-			(1 << 0) | (1 << 1) | (1 << 2),
-			(1 << 8) | (1 << 9) | (1 << 10),
-			(1 << 16) | (1 << 17) | (1 << 18),
-			(1 << 7) | (1 << 15) | (1 << 23),
-			(1 << 19) | (1 << 11) | (1 << 3),
-			(1 << 22) | (1 << 21) | (1 << 20),
-			(1 << 14) | (1 << 13) | (1 << 12),
-			(1 << 6) | (1 << 5) | (1 << 4),
-			(1 << 0) | (1 << 7) | (1 << 6),
-			(1 << 8) | (1 << 15) | (1 << 14),
-			(1 << 16) | (1 << 23) | (1 << 22),
-			(1 << 1) | (1 << 9) | (1 << 17),
-			(1 << 21) | (1 << 13) | (1 << 5),
-			(1 << 18) | (1 << 19) | (1 << 20),
-			(1 << 10) | (1 << 11) | (1 << 12),
-			(1 << 2) | (1 << 3) | (1 << 4)
-		]);
-
-
 		/*
-		  Data structure for our mill game:
+			Data structure for our mill game:
 
-			0--------------1-------------2  <  level 0
+			We represent the board state with where the nth bit (from the right) is
+			encoded according the following schematic:
+
+
+
+			0--------------1-------------2    <--  (outer) ring 0
 			|              |             |
-			|      8-------9------10     |  <  level 1
+			|      8-------9------10     |   <--  (inner) ring 1
 			|      |       |       |     |
-			|      |  16--17--18   |     |  <  level 2
+			|      |  16--17--18   |     |  <--  (innermost) ring 2
 			|      |   |       |   |     |
 			|      |   |       |   |     |
 			7-----15--23      19--11-----3
@@ -48,18 +32,33 @@ export class MorrisGame extends EventEmitter {
 			|              |             |
 			6--------------5-------------4
 
-			0-7  : Ring 0
-			8-15 : Ring 1
-			16-23: Ring 2
-
 		*/
+
+		this.millBitmasks = Object.freeze([
+			( 1 <<  0) | ( 1 <<  1) | ( 1 <<  2),
+			( 1 <<  8) | ( 1 <<  9) | ( 1 << 10),
+			( 1 << 16) | ( 1 << 17) | ( 1 << 18),
+			( 1 <<  7) | ( 1 << 15) | ( 1 << 23),
+			( 1 << 19) | ( 1 << 11) | ( 1 <<  3),
+			( 1 << 22) | ( 1 << 21) | ( 1 << 20),
+			( 1 << 14) | ( 1 << 13) | ( 1 << 12),
+			( 1 <<  6) | ( 1 <<  5) | ( 1 <<  4),
+			( 1 <<  0) | ( 1 <<  7) | ( 1 <<  6),
+			( 1 <<  8) | ( 1 << 15) | ( 1 << 14),
+			( 1 << 16) | ( 1 << 23) | ( 1 << 22),
+			( 1 <<  1) | ( 1 <<  9) | ( 1 << 17),
+			( 1 << 21) | ( 1 << 13) | ( 1 <<  5),
+			( 1 << 18) | ( 1 << 19) | ( 1 << 20),
+			( 1 << 10) | ( 1 << 11) | ( 1 << 12),
+			( 1 <<  2) | ( 1 <<  3) | ( 1 <<  4)
+		]);
 
 		this.stones = stones;
 		this.removedStones = removedStones;
 		this.moves = [];
 	}
 
-  static get PLAYER_WHITE() { return 0; }
+  static get PLAYER_WHITE( ) { return 0; }
   static get PLAYER_BLACK() { return 1; }
   static get PHASE1() { return 1; }
   static get PHASE2() { return 2; }
@@ -99,6 +98,20 @@ export class MorrisGame extends EventEmitter {
 	}
 
 
+
+	reset()
+	{
+		this.triggerEvent("game:beforereset");
+		this.stones = [0,0];
+		this.removedStones = [0,0];
+		this.moves = [];
+		this.triggerEvent("boardstate:changed");
+		this.triggerEvent("game:reset");
+		this._proceedOrEndGame();
+
+	}
+
+
 	playerAllowedToMove(player,from,to)
 	{
 
@@ -117,10 +130,12 @@ export class MorrisGame extends EventEmitter {
 		{
 			return false;
 		}
+
 		if(from !== null && this.getPhaseForPlayer(player) === MorrisGame.PHASE1)
 		{
 			return false;
 		}
+
 		if(from !== null && ((this.stones[player] >> from) & 1) !== 1)
 		{
 			return false;
@@ -184,6 +199,54 @@ export class MorrisGame extends EventEmitter {
 		}
 	}
 
+	getLastMove()
+	{
+		if(this.moves.length === 0)
+		{
+			return null;
+		}
+		else
+		{
+			return this.moves[this.moves.length-1];
+		}
+	}
+
+	undoLastMove(amount=1)
+	{
+		let movesLeftToUndo = amount;
+		while(movesLeftToUndo > 0)
+		{
+			movesLeftToUndo--;
+			let lastMove = this.moves.pop();
+			if(lastMove)
+			{
+				console.log("Undoing",lastMove);
+
+				if(lastMove.from !== null)
+				{
+					this.stones[lastMove.player] |= (1 << lastMove.from);
+				}
+
+				this.stones[lastMove.player] &= ~(1 << lastMove.to);
+
+				if(lastMove.removedPiece !== null)
+				{
+					const opponent = 1 - lastMove.player;
+					this.stones[opponent] |= (1 << lastMove.removedPiece);
+					this.removedStones[opponent]--;
+				}
+				this.triggerEvent("move:undone",lastMove);
+			}
+			else
+			{
+				break;
+			}
+		}
+		this.triggerEvent('boardstate:changed');
+		this._proceedOrEndGame();
+		console.log(this);
+	}
+
 	applyMove(move)
 	{
 		if(this.playerAllowedToMove(move.player,move.from,move.to))
@@ -241,6 +304,7 @@ export class MorrisGame extends EventEmitter {
 		const beforeMove = this._getMillHash(this.getClosedMillsIndicesForPlayer(player));
 
 		let tmp = this.stones[player];
+
 		//Perform move on tmp:
 		if(from !== null)
 		{
@@ -261,6 +325,7 @@ export class MorrisGame extends EventEmitter {
 		{
 			this.stones[move.player] &= ~(1 << move.from);
 		}
+
 		this.stones[move.player] |= (1 << move.to);
 
 		this.moves.push(move);
@@ -284,6 +349,7 @@ export class MorrisGame extends EventEmitter {
 	{
 		const whiteWon = this.hasWon(MorrisGame.PLAYER_WHITE);
 		const blackWon = this.hasWon(MorrisGame.PLAYER_BLACK);
+
 		if(this.isDraw())
 		{
 			this.triggerEvent('game:ended', true, undefined);
@@ -501,12 +567,6 @@ export class MorrisGame extends EventEmitter {
 		} else {
 			return MorrisGame.PLAYER_BLACK;
 		}
-	}
-
-
-	getSuccessorConfigurations()
-	{
-
 	}
 
 }

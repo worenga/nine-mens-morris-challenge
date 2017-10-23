@@ -296,8 +296,9 @@ export class MorrisBoardUi extends EventEmitter {
   {
     this._setStones(this.whiteStones,placedWhiteStones,numRemovedStonesWhite);
     this._setStones(this.blackStones,placedBlackStones,numRemovedStonesBlack);
-    //this._alignFreeStonePositions();
+    this._alignFreeStonePositions();
     this._alignPlacedStonesPositions();
+    this.canvas.renderAll();
   }
 
   _alignPlacedStonesPositions()

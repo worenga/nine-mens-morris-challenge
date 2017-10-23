@@ -23,6 +23,14 @@ console.log(activePlayerAgents);
 ui.setTurn(MorrisBoardUi.WHITE_MOVE);
 
 
+document.getElementById("reset").onclick = (e) => {
+  game.reset();
+};
+
+document.getElementById("undo").onclick = (e) => {
+  game.undoLastMove(2);
+};
+
 game.on("game:ended",(isDraw, winner) => {
   console.log('game ended! (isDraw, winner)', isDraw, winner);
 });
