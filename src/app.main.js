@@ -45,10 +45,11 @@ let app = new Vue({
       });
 
       this.game.on("boardstate:changed",() => {
-        this.ui.setStones(this.game.getPositionsForPlayer(MorrisGame.PLAYER_WHITE),
-                     this.game.getPositionsForPlayer(MorrisGame.PLAYER_BLACK),
-                     this.game.getRemovedStonesForPlayer(MorrisGame.PLAYER_WHITE),
-                     this.game.getRemovedStonesForPlayer(MorrisGame.PLAYER_BLACK)
+        const config = this.game.getConfiguration();
+        this.ui.setStones(config.getPositionsForPlayer(MorrisGame.PLAYER_WHITE),
+                          config.getPositionsForPlayer(MorrisGame.PLAYER_BLACK),
+                          config.getRemovedStonesForPlayer(MorrisGame.PLAYER_WHITE),
+                          config.getRemovedStonesForPlayer(MorrisGame.PLAYER_BLACK)
         );
       });
 

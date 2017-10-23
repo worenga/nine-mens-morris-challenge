@@ -24,7 +24,7 @@ export class NaiveRandomAgent extends Agent
     }
     else
     {
-      const stonePositions = this.game.getPositionsForPlayer(this.player);
+      const stonePositions = this.game.getConfiguration().getPositionsForPlayer(this.player);
 
       do {
         from = stonePositions[getRandomInt(0,stonePositions.length - 1)];
@@ -32,9 +32,9 @@ export class NaiveRandomAgent extends Agent
       } while( !this.game.playerAllowedToMove(this.player,from,to) );
     }
 
-    if( this.game.moveRequiresRemoval(this.player,from,to) )
+    if( this.game.getConfiguration().moveRequiresRemoval(this.player,from,to) )
     {
-        const piecesToRemove = this.game.getRemovablePiecesForPlayer(this.player);
+        const piecesToRemove = this.game.getConfiguration().getRemovablePiecesForPlayer(this.player);
         const randomIdx = getRandomInt(0,piecesToRemove.length - 1);
         removedStone = piecesToRemove[randomIdx];
         console.log('removing',this.player,removedStone,piecesToRemove);

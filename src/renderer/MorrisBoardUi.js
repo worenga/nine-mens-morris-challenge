@@ -481,7 +481,8 @@ export class MorrisBoardUi extends EventEmitter {
 
 		this.canvas.on('mouse:up', (e) =>	{
         let stone = e.target;
-        if(stone){
+        if(stone)
+        {
           stone.wasMovingFired = false;
         }
 			}
