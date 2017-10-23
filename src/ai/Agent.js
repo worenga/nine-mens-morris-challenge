@@ -10,4 +10,9 @@ export class Agent
   {
     return false;
   }
+
+  getNextMove()
+  {
+    throw "Abstract Agent is not an KI oracle-agent";
+  }
 }

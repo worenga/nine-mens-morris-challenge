@@ -175,16 +175,19 @@ export class MorrisBoardUi extends EventEmitter {
                                 [ positionsLeft.left, positionsTop.center ]
       ];
 
-      for( let i=0; i<8; i++)
+      for( let i=0; i<8; i++ )
       {
+        const currentPositionIndex = level * 8 + i;
+
         let intersectionCircle = new fabric.Circle(Object.assign({
           left: circlePositions[i][0],
           top:  circlePositions[i][1],
         }, circleParams));
 
         intersectionCircle.hasControls = intersectionCircle.hasBorders = false;
-        intersectionCircle.positionIndex = level * 8 + i;
+        intersectionCircle.positionIndex = currentPositionIndex;
         this.canvas.add(intersectionCircle);
+
 
         let hintCircle = new fabric.Circle(Object.assign({
           left: circlePositions[i][0],
@@ -192,18 +195,18 @@ export class MorrisBoardUi extends EventEmitter {
         }, hintCircleParams));
 
         hintCircle.hasControls = hintCircle.hasBorders = false;
-        hintCircle.positionIndex = level * 8 + i;
+        hintCircle.positionIndex = currentPositionIndex;
         this.hintCircles.add(hintCircle);
 
+
         let removableSign = this._createRemovalSign(circlePositions[i]);
-        removableSign.positionIndex = level * 8 + i;
+        removableSign.positionIndex = currentPositionIndex;
         this.removalIndicators.push(removableSign);
       }
 
-
     }
-    this.canvas.add(this.hintCircles);
 
+    this.canvas.add(this.hintCircles);
 
   }
 
@@ -214,7 +217,9 @@ export class MorrisBoardUi extends EventEmitter {
       {
         obj.fillWhenActive = obj.colorHighlight;
         obj.fillWhenInactive = obj.colorAllowed;
-      } else {
+      }
+      else
+      {
         obj.fillWhenActive = obj.colorNotAllowed;
         obj.fillWhenInactive = obj.colorNotAllowed;
       }
@@ -262,12 +267,16 @@ export class MorrisBoardUi extends EventEmitter {
       strokeWidth: 4,
     });
 
-    let removableSign = new fabric.Group([removalCircle,removalLineX2,removalLineX1], {
-      hasControls: false,
-      hasBorders: false,
-      lockMovementX : true,
-      lockMovementY : true
-    });
+    let removableSign = new fabric.Group(
+      [removalCircle,removalLineX2,removalLineX1],
+      {
+        hasControls: false,
+        hasBorders: false,
+        lockMovementX : true,
+        lockMovementY : true
+      }
+    );
+
     return removableSign;
   }
 
@@ -275,22 +284,31 @@ export class MorrisBoardUi extends EventEmitter {
   {
     this.canvas.remove(...target);
     let idx = 0;
+
     for(;idx<placedStones.length;idx++)
     {
+
       target[idx].isRemoved = false;
       target[idx].currentPositionIndex = placedStones[idx];
       this.canvas.add(target[idx]);
+
     }
+
     for(;idx<9;idx++)
     {
+
       target[idx].isRemoved = (idx - placedStones.length) < numRemoved;
       target[idx].currentPositionIndex = null;
+
       if( !target[idx].isRemoved )
       {
         this.canvas.add(target[idx]);
       }
+
     }
+
   }
+
 
   setStones(placedWhiteStones, placedBlackStones, numRemovedStonesWhite, numRemovedStonesBlack)
   {
@@ -300,6 +318,7 @@ export class MorrisBoardUi extends EventEmitter {
     this._alignPlacedStonesPositions();
     this.canvas.renderAll();
   }
+
 
   _alignPlacedStonesPositions()
   {
@@ -314,6 +333,7 @@ export class MorrisBoardUi extends EventEmitter {
     }
 
   }
+
 
   _setupStones() {
 
@@ -376,9 +396,10 @@ export class MorrisBoardUi extends EventEmitter {
 		this.canvas.on('object:moving', (e) => {
 			let stone = e.target;
 
-      //This is a security precaution
+
       if(this.removalIndicators.indexOf(e.target) !== -1)
       {
+        //This is a security precaution.
         return;
       }
 
@@ -394,18 +415,27 @@ export class MorrisBoardUi extends EventEmitter {
 
 			let hoverObject = null;
 			_this.hintCircles.forEachObject((obj) => {
-				obj.setCoords();
-				if (obj.intersectsWithObject(stone) || obj.isContainedWithinObject(stone)) {
+
+        obj.setCoords();
+
+        if (obj.intersectsWithObject(stone) || obj.isContainedWithinObject(stone))
+        {
 					hoverObject = obj;
 					obj.set({fill: obj.fillWhenActive});
-				} else {
+				}
+        else
+        {
 					obj.set({fill: obj.fillWhenInactive});
 				}
+
 			});
 
-			if (hoverObject !== null) {
+			if (hoverObject !== null)
+      {
 				stone.hoverObject = hoverObject;
-			} else {
+			}
+      else
+      {
 				stone.hoverObject = null;
 			}
 
@@ -470,9 +500,11 @@ export class MorrisBoardUi extends EventEmitter {
            stone.hoverObject.positionIndex === undefined ||
            !this.triggerEvent("stone:moved", stone.player, stone.currentPositionIndex, stone.hoverObject.positionIndex))
       {
-        if (stone.currentPositionIndex !== null) {
+        if (stone.currentPositionIndex !== null)
+        {
           _this.hintCircles.forEachObject((obj) => {
-            if (obj.positionIndex === stone.currentPositionIndex) {
+            if (obj.positionIndex === stone.currentPositionIndex)
+            {
               stone.set({'top': obj.top, 'left': obj.left}).setCoords();
             }
           });
@@ -480,12 +512,13 @@ export class MorrisBoardUi extends EventEmitter {
 			}
 
       this._alignFreeStonePositions();
-			//_this.hintCircles.setOpacity(0.0);
 			_this.hintCircles.animate('opacity', 0.0);
 		});
 
 
   }
+
+
 
   _alignFreeStonePositions()
   {
@@ -495,7 +528,8 @@ export class MorrisBoardUi extends EventEmitter {
     //Adjust White Stones
     for (let i = 0; i < 9; i++) {
       let curItem = this.whiteStones[i];
-      if (curItem.isRemoved !== true && curItem.currentPositionIndex === null) {
+      if (curItem.isRemoved !== true && curItem.currentPositionIndex === null)
+      {
         curItem.set({
           'top': this.paddingTop / 2,
           'left': this.paddingLeft + atTop * stoneOffset
@@ -505,11 +539,11 @@ export class MorrisBoardUi extends EventEmitter {
     }
 
     atTop = 0;
-
     //Adjust Black Stones
     for (let i = 0; i < 9; i++) {
       let curItem = this.blackStones[i];
-      if (curItem.isRemoved !== true && curItem.currentPositionIndex === null) {
+      if (curItem.isRemoved !== true && curItem.currentPositionIndex === null)
+      {
         curItem.set({
           'top': this.paddingTop / 2,
           'left': this.paddingLeft + this.boardWidth - atTop * stoneOffset
@@ -517,6 +551,7 @@ export class MorrisBoardUi extends EventEmitter {
         atTop += 1;
       }
     }
+
     this.canvas.renderAll();
   }
 
@@ -529,21 +564,26 @@ export class MorrisBoardUi extends EventEmitter {
   static get WHITE_MOVE() {
     return 0;
   }
+
   static get WHITE_REMOVE() {
     return 1;
   }
+
   static get BLACK_MOVE() {
     return 2;
   }
-	static get BLACK_REMOVE() {
+
+  static get BLACK_REMOVE() {
     return 3;
   }
+
 	static get NO_TURN() { //Draw or Win
     return 4;
   }
 
   setTurn(turn) {
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 9; i++)
+    {
 				this.whiteStones[i].selectable =
 						(turn === MorrisBoardUi.WHITE_MOVE);
 				this.blackStones[i].selectable =
@@ -553,6 +593,7 @@ export class MorrisBoardUi extends EventEmitter {
     if(turn === MorrisBoardUi.WHITE_REMOVE || turn === MorrisBoardUi.BLACK_REMOVE)
     {
       this.removalIndicators.forEach((group) => {
+
         if(this.activeRemovalIndicators.indexOf(group.positionIndex) !== -1)
         {
           group.setOpacity(1.0);
@@ -563,10 +604,11 @@ export class MorrisBoardUi extends EventEmitter {
           group.setOpacity(0.0);
           group.selectable = false;
         }
+
         this.canvas.add(group);
+
         group.bringToFront();
       });
-
 
     }
 

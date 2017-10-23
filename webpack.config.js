@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-  
+
 module.exports = {
   entry: {
   	app:'./src/app.main.js',
@@ -21,19 +21,22 @@ module.exports = {
     path: path.resolve(__dirname, 'dist')
   },
   module: {
-  rules: [
-    {
-      test: /\.js$/,
-      exclude: /(node_modules|bower_components)/,
-      use: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['env']
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['env']
+          }
         }
       }
+    ]
+  },
+  resolve: {
+    alias: {
+      'vue$': 'vue/dist/vue.esm.js' // 'vue/dist/vue.common.js' for webpack 1
     }
-  ]
-}
+  }
 };
-
-

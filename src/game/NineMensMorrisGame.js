@@ -15,7 +15,6 @@ export class MorrisGame extends EventEmitter {
 			encoded according the following schematic:
 
 
-
 			0--------------1-------------2    <--  (outer) ring 0
 			|              |             |
 			|      8-------9------10     |   <--  (inner) ring 1
@@ -108,7 +107,6 @@ export class MorrisGame extends EventEmitter {
 		this.triggerEvent("boardstate:changed");
 		this.triggerEvent("game:reset");
 		this._proceedOrEndGame();
-
 	}
 
 
@@ -220,8 +218,6 @@ export class MorrisGame extends EventEmitter {
 			let lastMove = this.moves.pop();
 			if(lastMove)
 			{
-				console.log("Undoing",lastMove);
-
 				if(lastMove.from !== null)
 				{
 					this.stones[lastMove.player] |= (1 << lastMove.from);
@@ -244,24 +240,31 @@ export class MorrisGame extends EventEmitter {
 		}
 		this.triggerEvent('boardstate:changed');
 		this._proceedOrEndGame();
-		console.log(this);
 	}
+
 
 	applyMove(move)
 	{
+
 		if(this.playerAllowedToMove(move.player,move.from,move.to))
 		{
+
 			const requiresRemoval = this.moveRequiresRemoval(move.player,move.from,move.to);
 
 			if(requiresRemoval)
 			{
+
 				if(this.getRemovablePiecesForPlayer(move.player).indexOf(move.removedPiece) === -1)
 				{
+					console.log("cannot remove",move);
 					//Cannot remove this peace or has no removable piece.
 					return false;
 				}
+
 			}
+
 			this._persistsMoveUnsafe(move);
+
 			return true;
 		}
 		else
@@ -270,10 +273,11 @@ export class MorrisGame extends EventEmitter {
 		}
 	}
 
+
 	getPositionsForPlayer(player)
 	{
 		let positionsIndices = [];
-		for(let i=0;i<24;i++)
+		for( let i=0; i<24 ;i++ )
 		{
 			if(((this.stones[player] >> i) & 1) === 1 )
 			{
@@ -293,11 +297,13 @@ export class MorrisGame extends EventEmitter {
 		return hash;
 	}
 
+
 	_newMillClosed(beforeMoveHash,afterMoveHash)
 	{
 		return ((beforeMoveHash ^ afterMoveHash) !== 0) &&
 						bitCount(afterMoveHash) >= bitCount(beforeMoveHash);
 	}
+
 
 	moveRequiresRemoval(player,from,to)
 	{
@@ -317,6 +323,7 @@ export class MorrisGame extends EventEmitter {
 		return this._newMillClosed(beforeMove,afterTmpMove);
 	}
 
+
 	_persistsMoveUnsafe(move)
 	{
 		const millHashBeforeMove = this._getMillHash(this.getClosedMillsIndicesForPlayer(move.player));
@@ -328,13 +335,18 @@ export class MorrisGame extends EventEmitter {
 
 		this.stones[move.player] |= (1 << move.to);
 
+		if(move.removedPiece !== null)
+		{
+			const opponent = 1 - move.player;
+			this._removeStoneUnsafe(opponent,move.removedPiece);
+		}
+
 		this.moves.push(move);
 
 		const millHashAfterMove = this._getMillHash(this.getClosedMillsIndicesForPlayer(move.player));
 
 		this.triggerEvent('boardstate:changed');
 
-		//TODO: Encapsulate internal state.
 		if(this._newMillClosed(millHashBeforeMove,millHashAfterMove) && move.removedPiece === null)
 		{
 			this.triggerEvent('move:removal_required', move.player);
@@ -344,6 +356,7 @@ export class MorrisGame extends EventEmitter {
 			this._proceedOrEndGame();
 		}
 	}
+
 
 	_proceedOrEndGame()
 	{
@@ -364,6 +377,11 @@ export class MorrisGame extends EventEmitter {
 		}
 	}
 
+	_removeStoneUnsafe(player,position)
+	{
+			this.stones[player] &= ~(1 << position);
+			this.removedStones[player] += 1;
+	}
 
 	removeStone(position)
 	{
@@ -371,18 +389,18 @@ export class MorrisGame extends EventEmitter {
 		let currentMove = this.moves[this.moves.length-1];
 		const opponent = 1 - currentMove.player;
 		currentMove.removedPiece = position;
-
-		this.stones[opponent] &= ~(1 << position);
-		this.removedStones[opponent] += 1;
+		this._removeStoneUnsafe(opponent,position);
 
 		this.triggerEvent("boardstate:changed");
 		this._proceedOrEndGame();
 	}
 
+
 	getRemovedStonesForPlayer(player)
 	{
 		return this.removedStones[player];
 	}
+
 
 	encodePosToHumanReadable(pos)
 	{
@@ -416,12 +434,14 @@ export class MorrisGame extends EventEmitter {
 					  this.playerCanMove(MorrisGame.PLAYER_BLACK) === false );
 	}
 
+
 	hasWon(player)
 	{
 		const opponent = 1 - player;
 		return (this.removedStones[opponent] > 6 ||
 					  this.playerCanMove(opponent) === false );
 	}
+
 
 	getRemovablePiecesForPlayer(player)
 	{
@@ -451,10 +471,12 @@ export class MorrisGame extends EventEmitter {
 		return removablePositions;
 	}
 
+
 	getNumberOfClosedMillsForPlayer(player)
 	{
 		return this.getClosedMillsIndicesForPlayer(player).length;
 	}
+
 
 	playerCanMove(player)
 	{
@@ -561,12 +583,16 @@ export class MorrisGame extends EventEmitter {
 
 	get currentTurn()
 	{
+
 		if( this.moves.length % 2 == 0 )
 		{
 			return MorrisGame.PLAYER_WHITE;
-		} else {
+		}
+		else
+		{
 			return MorrisGame.PLAYER_BLACK;
 		}
+
 	}
 
 }

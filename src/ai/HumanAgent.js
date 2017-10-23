@@ -9,7 +9,7 @@ export class HumanAgent extends Agent
 
   getNextMove()
   {
-    throw "Human Player is no oracle-agent";
+    throw "Human Player Agent is no an KI oracle-agent";
   }
 
 }

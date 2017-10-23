@@ -27,7 +27,7 @@ export class NaiveRandomAgent extends Agent
       const stonePositions = this.game.getPositionsForPlayer(this.player);
 
       do {
-        from = stonePositions[getRandomInt(0,stonePositions.length)];
+        from = stonePositions[getRandomInt(0,stonePositions.length - 1)];
         to = getRandomInt(0,23);
       } while( !this.game.playerAllowedToMove(this.player,from,to) );
     }
@@ -35,7 +35,9 @@ export class NaiveRandomAgent extends Agent
     if( this.game.moveRequiresRemoval(this.player,from,to) )
     {
         const piecesToRemove = this.game.getRemovablePiecesForPlayer(this.player);
-        removedStone = piecesToRemove[getRandomInt(0,piecesToRemove.length)];
+        const randomIdx = getRandomInt(0,piecesToRemove.length - 1);
+        removedStone = piecesToRemove[randomIdx];
+        console.log('removing',this.player,removedStone,piecesToRemove);
     }
 
     return new NineMensMorrisMove(this.player,to,from,removedStone);
