@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server --open",
-    "build": "webpack dist/"
+    "build": "webpack",
+    "buildprod": "NODE_ENV=production webpack"
   },
   "keywords": [
     "nine",
@@ -20,6 +21,7 @@
     "babel-runtime": "^6.26.0",
     "fabric-webpack": "^1.6.0-rc.1",
     "task.js": "0.0.24",
+    "uglifyjs-webpack-plugin": "^1.0.1",
     "vue": "^2.5.2",
     "webpack-dev-server": "^2.9.1"
   },

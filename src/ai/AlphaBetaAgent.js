@@ -71,7 +71,7 @@ export class AlphaBetaAgent extends Agent
       let maxScore = alpha;
       let bestMove = null;
       let numConfigs = 0;
-
+ 
       for(let successorConfiguration of configuration.getSuccessorConfiguration(player))
       {
         numConfigs += 1;

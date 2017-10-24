@@ -1,6 +1,10 @@
 const path = require('path');
+
+const Uglify = require("uglifyjs-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+
+var webpack = require('webpack')
 
 module.exports = {
   entry: {
@@ -14,12 +18,20 @@ module.exports = {
       new CleanWebpackPlugin(['dist']),
       new HtmlWebpackPlugin({
         chunks:['app'],
-        template:'./src/index.tpl.html'
+        template:'./src/index.tpl.html',
+        minify: {
+          removeComments: true,
+          collapseWhitespace: true,
+          removeAttributeQuotes: true
+        },
       })
   ],
 
   devServer: {
-       contentBase: './dist'
+       contentBase: './dist',
+       historyApiFallback: true,
+       noInfo: true,
+       overlay: true
   },
 
   devtool: 'inline-source-map',
@@ -46,7 +58,33 @@ module.exports = {
   },
   resolve: {
     alias: {
-      'vue$': 'vue/dist/vue.esm.js' // 'vue/dist/vue.common.js' for webpack 1
+      'vue$': 'vue/dist/vue.common.js' // 'vue/dist/vue.common.js' for webpack 1
     }
+  },
+  performance: {
+    hints: false
   }
 };
+
+
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports.devtool = '#source-map';
+  // http://vue-loader.vuejs.org/en/workflow/production.html
+  module.exports.plugins = (module.exports.plugins || []).concat([
+
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: '"production"'
+      }
+    }),
+
+    new Uglify({
+      sourceMap: true
+    }),
+
+    new webpack.LoaderOptionsPlugin({
+      minimize: true
+    })
+  ]);
+}
