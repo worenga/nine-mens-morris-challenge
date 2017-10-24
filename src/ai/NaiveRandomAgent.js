@@ -1,45 +1,55 @@
+import {NineMensMorrisGameConfiguration} from '../game/NineMensMorrisGameConfiguration.js';
 import {NineMensMorrisMove} from '../game/NineMensMorrisMove.js';
-import {MorrisGame} from '../game/NineMensMorrisGame.js';
+
 import {getRandomInt} from '../helpers/Util.js';
 
 import {Agent} from './Agent.js';
 
 export class NaiveRandomAgent extends Agent
 {
-  getNextMove()
+
+  getNextMove(configuration,player,callback)
   {
+
     let from = null;
     let to = null;
     let removedStone = null;
 
-    if( this.game.getPhaseForPlayer(this.player) === MorrisGame.PHASE1 )
+    if( configuration.getPhaseForPlayer(player) === NineMensMorrisGameConfiguration.PHASE1 )
     {
-
+      let i = 0;
       do {
         to = getRandomInt(0,23);
-        console.log(from,to,this.game.currentTurn);
-      } while( !this.game.playerAllowedToMove(this.player,from,to) );
+        if(i++ > 1000)
+        {
+          throw "exhausted!";
+        }
+      } while( !configuration.playerAllowedToMove(player,from,to) );
 
 
     }
     else
     {
-      const stonePositions = this.game.getConfiguration().getPositionsForPlayer(this.player);
+      const stonePositions = configuration.getPositionsForPlayer(player);
 
       do {
         from = stonePositions[getRandomInt(0,stonePositions.length - 1)];
         to = getRandomInt(0,23);
-      } while( !this.game.playerAllowedToMove(this.player,from,to) );
+        console.log('draw2');
+      } while( !configuration.playerAllowedToMove(player,from,to) );
     }
 
-    if( this.game.getConfiguration().moveRequiresRemoval(this.player,from,to) )
+    if( configuration.moveRequiresRemoval(player,from,to) )
     {
-        const piecesToRemove = this.game.getConfiguration().getRemovablePiecesForPlayer(this.player);
+        const piecesToRemove = configuration.getRemovablePiecesForPlayer(player);
         const randomIdx = getRandomInt(0,piecesToRemove.length - 1);
         removedStone = piecesToRemove[randomIdx];
-        console.log('removing',this.player,removedStone,piecesToRemove);
+        //console.log('removing',player,removedStone,piecesToRemove);
     }
+    let move = new NineMensMorrisMove(player,to,from,removedStone);
 
-    return new NineMensMorrisMove(this.player,to,from,removedStone);
+
+  callback(move);
+
   }
 }

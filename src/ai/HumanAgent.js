@@ -7,7 +7,7 @@ export class HumanAgent extends Agent
     return true;
   }
 
-  getNextMove()
+  getNextMove(callback)
   {
     throw "Human Player Agent is no an KI oracle-agent";
   }

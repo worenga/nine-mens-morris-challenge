@@ -1,11 +1,14 @@
 //import {NineMensMorrisGame} from './game/Game';
-import {MorrisBoardUi} from './renderer/MorrisBoardUi.js';
-import {MorrisGame} from './game/NineMensMorrisGame.js';
+import {NineMensMorrisBoardUi} from './renderer/NineMensMorrisBoardUi.js';
+import {NineMensMorrisGame} from './game/NineMensMorrisGame.js';
 
 import {HumanAgent} from './ai/HumanAgent.js';
-import {NaiveRandomAgent} from './ai/NaiveRandomAgent.js';
+import {WorkerProxyAgent} from './ai/WorkerProxyAgent.js';
 
 import Vue from 'vue';
+
+
+
 
 let app = new Vue({
   el: '#gameboard-container',
@@ -19,16 +22,17 @@ let app = new Vue({
   mounted: function () {
     const CANVAS_ID = 'gameboard';
 
-    this.game = new MorrisGame();
+    this.game = new NineMensMorrisGame();
 
-    this.ui = new MorrisBoardUi(CANVAS_ID);
-    this.ui.setTurn(MorrisBoardUi.WHITE_MOVE);
+    this.ui = new NineMensMorrisBoardUi(CANVAS_ID);
+    this.ui.setTurn(NineMensMorrisBoardUi.WHITE_MOVE);
 
     this.availableAgents.push({id:'human', name: "Human Player", controller: HumanAgent});
-    this.availableAgents.push({id:'random', name:"Random AI", controller: NaiveRandomAgent});
+    this.availableAgents.push({id:'random', name:"Random AI", controller: WorkerProxyAgent, args: { bundle: "ai_random.bundle.js"} });
+    this.availableAgents.push({id:'alphabeta', name:"AlphaBeta AI", controller: WorkerProxyAgent, args: { bundle: "ai_alphabeta.bundle.js"} });
 
     this.selectedAgentWhite = 'human';
-    this.selectedAgentBlack = 'random';
+    this.selectedAgentBlack = 'alphabeta';
 
     this.game.on("game:ended",(isDraw, winner) => {
       //TODO: Better indicator for this!
@@ -36,7 +40,15 @@ let app = new Vue({
     });
 
       this.game.on("move:move_required", (nextPlayer) => {
-        this.enableNextPlayer(nextPlayer);
+        setTimeout( () => {
+          //Prevent bogus side effects when reset or undo
+          //was pressed and currentTurn might have been reset.
+          if(this.game.currentTurn != nextPlayer)
+          {
+            return ;
+          }
+          this.enableNextPlayer(nextPlayer);
+        }, 0 );
       });
 
       this.ui.on( "stone:remove", (position) => {
@@ -46,10 +58,10 @@ let app = new Vue({
 
       this.game.on("boardstate:changed",() => {
         const config = this.game.getConfiguration();
-        this.ui.setStones(config.getPositionsForPlayer(MorrisGame.PLAYER_WHITE),
-                          config.getPositionsForPlayer(MorrisGame.PLAYER_BLACK),
-                          config.getRemovedStonesForPlayer(MorrisGame.PLAYER_WHITE),
-                          config.getRemovedStonesForPlayer(MorrisGame.PLAYER_BLACK)
+        this.ui.setStones(config.getPositionsForPlayer(NineMensMorrisGame.PLAYER_WHITE),
+                          config.getPositionsForPlayer(NineMensMorrisGame.PLAYER_BLACK),
+                          config.getRemovedStonesForPlayer(NineMensMorrisGame.PLAYER_WHITE),
+                          config.getRemovedStonesForPlayer(NineMensMorrisGame.PLAYER_BLACK)
         );
       });
 
@@ -60,15 +72,15 @@ let app = new Vue({
       this.game.on("move:removal_required",(player) => {
 
         this.ui.enableRemovalIndicatorsFor(
-            this.game.getRemovablePiecesForPlayer(player));
+            this.game.getConfiguration().getRemovablePiecesForPlayer(player));
 
-        if (player === MorrisGame.PLAYER_WHITE)
+        if (player === NineMensMorrisGame.PLAYER_WHITE)
         {
-          this.ui.setTurn(MorrisBoardUi.WHITE_REMOVE);
+          this.ui.setTurn(NineMensMorrisBoardUi.WHITE_REMOVE);
         }
         else
         {
-          this.ui.setTurn(MorrisBoardUi.BLACK_REMOVE);
+          this.ui.setTurn(NineMensMorrisBoardUi.BLACK_REMOVE);
         }
 
       });
@@ -94,20 +106,23 @@ let app = new Vue({
   {
     reset: function()
     {
-      this.game.reset();
+      setTimeout( () => {
+        this.game.reset();
+      }, 0);
     },
 
     undo: function()
     {
-      if(this.activePlayerAgents[1-this.game.currentTurn].isHuman())
-      {
-          this.game.undoLastMove(1);
-      }
-      else
-      {
-        this.game.undoLastMove(2);
-      }
-
+      setTimeout( () => {
+        if(this.activePlayerAgents[1-this.game.currentTurn].isHuman())
+        {
+            this.game.undoLastMove(1);
+        }
+        else
+        {
+          this.game.undoLastMove(2);
+        }
+      }, 0 );
     },
 
     setPlayerAgent: function(player,id)
@@ -116,7 +131,7 @@ let app = new Vue({
       let agent = this.availableAgents.filter( (obj) => {return obj.id === id;})[0];
       if(agent)
       {
-        this.activePlayerAgents[player] = new agent.controller(this.game,player);
+        this.activePlayerAgents[player] = new agent.controller(agent.args);
       }
     },
 
@@ -124,31 +139,33 @@ let app = new Vue({
     {
       if(this.activePlayerAgents[nextPlayer].isHuman())
       {
-        if (nextPlayer === MorrisGame.PLAYER_WHITE)
+        if (nextPlayer === NineMensMorrisGame.PLAYER_WHITE)
         {
-          this.ui.setTurn(MorrisBoardUi.WHITE_MOVE);
+          this.ui.setTurn(NineMensMorrisBoardUi.WHITE_MOVE);
         }
         else
         {
-          this.ui.setTurn(MorrisBoardUi.BLACK_MOVE);
+          this.ui.setTurn(NineMensMorrisBoardUi.BLACK_MOVE);
         }
       }
       else
       {
-        this.ui.setTurn(MorrisBoardUi.NO_TURN);
-        //If two AI's are playing against each other setTimeout
-        //will prevent infinite event bubbling.
-        setTimeout(()=>{
-          let nextMove = this.activePlayerAgents[nextPlayer].getNextMove();
-          if( !this.game.applyMove(nextMove) )
-          {
-            console.log(this.game);
-            console.log(nextMove);
-            throw "AI generated invalid move.";
+        this.ui.setTurn(NineMensMorrisBoardUi.NO_TURN);
+        console.log('Asking AI for ',nextPlayer, this.game.getConfiguration());
+        this.activePlayerAgents[nextPlayer].getNextMove(
+          this.game.getConfiguration(), nextPlayer,
+          (nextMove) => {
+            if( !this.game.applyMove(nextMove) )
+            {
+              console.log(this.game);
+              console.log(nextMove);
+              throw "AI generated invalid move.";
+            }
           }
-        }, 1);
+        );
       }
     },
+
     playerAgentTakeControl(player,type)
     {
       this.setPlayerAgent(player,type);
@@ -163,10 +180,10 @@ let app = new Vue({
   },
   watch: {
     selectedAgentWhite: function (change) {
-      this.playerAgentTakeControl(MorrisGame.PLAYER_WHITE,change);
+      this.playerAgentTakeControl(NineMensMorrisGame.PLAYER_WHITE,change);
     },
     selectedAgentBlack: function (change) {
-      this.playerAgentTakeControl(MorrisGame.PLAYER_BLACK,change);
+      this.playerAgentTakeControl(NineMensMorrisGame.PLAYER_BLACK,change);
     }
   },
 });

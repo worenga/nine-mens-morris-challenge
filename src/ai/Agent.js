@@ -1,17 +1,14 @@
 export class Agent
 {
-  constructor(game,player)
-  {
-    this.game = game;
-    this.player = player;
-  }
+  constructor()
+  {}
 
   isHuman()
   {
     return false;
   }
 
-  getNextMove()
+  getNextMove(callback)
   {
     throw "Abstract Agent is not an KI oracle-agent";
   }

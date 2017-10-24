@@ -14,4 +14,18 @@ let getRandomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-export {negMod, bitCount, getRandomInt};
+
+let getSetBitIndices = (bits,maxlen) => {
+	let positionsIndices = [];
+	for( let i=0; i<24 ;i++ )
+	{
+		if( ((bits >> i) & 1) === 1 )
+		{
+			positionsIndices.push(i);
+		}
+	}
+	return positionsIndices;
+
+};
+
+export {negMod, bitCount, getRandomInt, getSetBitIndices};

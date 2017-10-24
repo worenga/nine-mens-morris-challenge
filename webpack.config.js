@@ -4,22 +4,31 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
   entry: {
-  	app:'./src/app.main.js',
+  	app: ['babel-polyfill','./src/app.main.js'],
+
+    ai_random: ['babel-polyfill','./src/ai_random.worker.js'],
+    ai_alphabeta: ['babel-polyfill','./src/ai_alphabeta.worker.js'],
   },
+
   plugins: [
       new CleanWebpackPlugin(['dist']),
       new HtmlWebpackPlugin({
+        chunks:['app'],
         template:'./src/index.tpl.html'
       })
   ],
+
   devServer: {
        contentBase: './dist'
   },
+
   devtool: 'inline-source-map',
+
   output: {
     filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist')
   },
+
   module: {
     rules: [
       {
@@ -28,7 +37,8 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['env']
+            presets: ['env'],
+            plugins: ['transform-runtime']
           }
         }
       }
