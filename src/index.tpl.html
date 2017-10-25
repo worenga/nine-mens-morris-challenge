@@ -6,12 +6,20 @@
 	#gameboard-container
 	{
 		margin:0 auto;
-		width:800px;
+		width: 800px;
+	}
+
+	[v-cloak] {
+  	display: none;
 	}
 	</style>
 </head>
 <body>
-	<div id="gameboard-container" >
+
+	
+
+	<div id="gameboard-container" v-cloak>
+
 		<div id="controls">
 
 			<button v-on:click="reset"> Reset </button>

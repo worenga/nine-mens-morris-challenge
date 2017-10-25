@@ -93,7 +93,9 @@ export class NineMensMorrisGameConfiguration
 
 	getClosedMillsIndicesForPlayer(player)
 	{
-		return NineMensMorrisGameConfiguration.getClosedMillsIndicesForStones(this.stones[player]);
+		return NineMensMorrisGameConfiguration.getClosedMillsIndicesForStones(
+                                                      this.stones[player]
+    );
 	}
 
 
@@ -190,10 +192,92 @@ export class NineMensMorrisGameConfiguration
 		return this.getClosedMillsIndicesForPlayer(player).length;
 	}
 
-  getConfigurationHash()
+
+  _getShiftedStoneConfiguration(shiftByBit)
+  {
+    //We have 3 rings, shift them accordingly.
+    let left = this.stones[0], right=this.stones[1];
+
+    const LeftUpper = (left >> 0) & 255;
+    const LeftMiddle = (left >> 8) & 255;
+    const LeftLower = (left >> 16) & 255;
+
+    const RightUpper = (right >> 0) & 255;
+    const RightMiddle = (right >> 8) & 255;
+    const RightLower = (right >> 16) & 255;
+
+    const circShiftLeftUpper = LeftUpper << shiftByBit | LeftUpper >> (8 - shiftByBit);
+    const circShiftLeftMiddle = LeftMiddle << shiftByBit | LeftMiddle >> (8 - shiftByBit);
+    const circShiftLeftLower = LeftLower << shiftByBit | LeftLower >> (8 - shiftByBit);
+    const shiftedLeft = circShiftLeftUpper | (circShiftLeftMiddle << 8) | (circShiftLeftLower << 16);
+
+    const circShiftRightUpper = RightUpper << shiftByBit | RightUpper >> (8 - shiftByBit);
+    const circShiftRightMiddle = RightMiddle << shiftByBit | RightMiddle >> (8 - shiftByBit);
+    const circShiftRightLower = RightLower << shiftByBit | RightLower >> (8 - shiftByBit);
+    const shiftedRight = circShiftRightUpper | (circShiftRightMiddle << 8) | (circShiftRightLower << 16);
+
+    return [shiftedLeft,shiftedRight];
+  }
+
+
+  //Compute equivalent rotations and
+  getUnifiedShiftHash(zobristTable)
   {
 
+    let maxLeft = this.stones[0];
+    let maxRight = this.stones[1];
+
+    let bestRotationLeft = this.stones[0];
+    let bestRotationRight = this.stones[1];
+
+    for(let shiftBy = 2; shiftBy < 8; shiftBy += 2)
+    {
+        let shifted = this._getShiftedStoneConfiguration(shiftBy);
+        if(shifted[0]>maxLeft || (shifted[0] === maxLeft && shifted[1] > maxRight))
+        {
+          bestRotationLeft = shifted[0];
+          bestRotationRight= shifted[1];
+        }
+    }
+
+    return this._getHash(zobristTable, bestRotationLeft, bestRotationRight, this.removedStones[0],this.removedStones[1]);
+
   }
+
+  _getHash(zobristTable, left, right, removedLeft, removedRight)
+  {
+    let hash = (removedLeft << (24+4))  & (removedRight << (24+8));
+    let curshift = 1;
+
+    for(let i = 0; i < 24;i++)
+    {
+      if((left&curshift) === curshift)
+      {
+        hash ^= zobristTable[0][i];
+      }
+
+      if((right&curshift) === curshift)
+      {
+        hash ^= zobristTable[1][i];
+      }
+
+      curshift = curshift << 1;
+    }
+
+    return hash;
+  }
+
+  getConfigurationHash(zobristTable)
+  {
+    return this._getHash(zobristTable,
+                         this.stones[0],
+                         this.stones[1],
+                         this.removedStones[0],
+                         this.removedStones[1]
+                       );
+  }
+
+
 
   getAmountStones(player)
   {
@@ -461,6 +545,11 @@ export class NineMensMorrisGameConfiguration
     return config;
   }
 
+  getStringRepr()
+  {
+    return `${this.stones[0]}-${this.stones[1]}`;
+  }
+
   * getSuccessorConfiguration(player)
   {
     //If we are in P1, we can essentially move anywhere where it is free:
@@ -479,7 +568,7 @@ export class NineMensMorrisGameConfiguration
           for(let removable of removables)
           {
             tmpMove.removedPiece = removable;
-            yield {move: Object.assign({},tmpMove), configuration: this.constructFollowUpConfiguration(player,tmpMove)};
+            yield { move: Object.assign({},tmpMove), configuration: this.constructFollowUpConfiguration(player,tmpMove)};
           }
 
         }

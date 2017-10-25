@@ -20,5 +20,10 @@ export class WorkerProxyAgent extends Agent
     };
     this.worker.postMessage(["requestAgentMove",configuration,player]);
   }
+  
+  terminate()
+  {
+    this.worker.terminate();
+  }
 
 }

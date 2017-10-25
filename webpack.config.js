@@ -53,12 +53,16 @@ module.exports = {
             plugins: ['transform-runtime']
           }
         }
-      }
-    ]
+      },
+    {
+      test: /\.vue$/,
+      loader: 'vue-loader'
+    }
+  ]
   },
   resolve: {
     alias: {
-      'vue$': 'vue/dist/vue.common.js' // 'vue/dist/vue.common.js' for webpack 1
+      'vue$': 'vue/dist/vue.common.js'
     }
   },
   performance: {

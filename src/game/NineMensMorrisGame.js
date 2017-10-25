@@ -7,7 +7,7 @@ export class NineMensMorrisGame extends EventEmitter {
 	constructor(stones = [0,0], removedStones = [0,0])
 	{
 		super();
-
+		this.initializationParams = { stones: stones, removedStones: removedStones };
 		this.configuration = new NineMensMorrisGameConfiguration(stones,removedStones);
 		this.moves = [];
 	}
@@ -18,7 +18,10 @@ export class NineMensMorrisGame extends EventEmitter {
 	reset()
 	{
 		this.triggerEvent("game:beforereset");
-		this.configuration = new NineMensMorrisGameConfiguration([0,0],[0,0]);
+		this.configuration = new NineMensMorrisGameConfiguration(
+			this.initializationParams.stones,
+			this.initializationParams.removedStones
+		);
 		this.moves = [];
 		this.triggerEvent("boardstate:changed");
 		this.triggerEvent("game:reset");
@@ -147,12 +150,61 @@ export class NineMensMorrisGame extends EventEmitter {
 	}
 
 
+	_isMoveWiseDraw()
+	{
+		//Reached the same position three times?
+		let moveHashtable = {};
+		let gameState = new NineMensMorrisGameConfiguration([0,0]);
+
+		for( let i = 0; i < this.moves.length; i++ )
+		{
+			gameState = gameState.constructFollowUpConfiguration( i % 2, this.moves[i] );
+			let lookup = moveHashtable[gameState.getStringRepr()];
+			if(!lookup)
+			{
+				moveHashtable[gameState.getStringRepr()] = 1;
+			}
+			else
+			{
+				if(++moveHashtable[gameState.getStringRepr()] > 2)
+				{
+					return true;
+				}
+			}
+		}
+
+
+		//No mill during the last 50 moves?
+		const LOOKBACK = 50;
+
+		if( this.moves.length < LOOKBACK )
+		{
+			return false;
+		}
+		else
+		{
+			let millFound = false;
+			for( let i = this.moves.length - LOOKBACK; i < this.moves.length; i++ )
+			{
+				if(this.moves[i].removedPiece !== null)
+				{
+					millFound = true;
+					break;
+				}
+			}
+			return !millFound;
+		}
+	}
+
 	_proceedOrEndGame()
 	{
 		const whiteWon = this.configuration.hasWon(NineMensMorrisGame.PLAYER_WHITE);
 		const blackWon = this.configuration.hasWon(NineMensMorrisGame.PLAYER_BLACK);
 
-		if(this.configuration.isDraw())
+		//Check whether the game configuration indicates a draw, or wheter
+		//we reached a move-wise draw (50 moves without a mill
+		// or three repetitions of the same move)
+		if(this.configuration.isDraw() || this._isMoveWiseDraw())
 		{
 			this.triggerEvent('game:ended', true, undefined);
 		}

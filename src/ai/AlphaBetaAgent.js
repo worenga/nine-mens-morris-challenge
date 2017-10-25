@@ -5,10 +5,6 @@ import {getRandomInt} from '../helpers/Util.js';
 
 import {Agent} from './Agent.js';
 
-const SCORE_INF  =  99999;
-const SCORE_LOST = -99998;
-const SCORE_DRAW = 0;
-
 
 export class AlphaBetaAgent extends Agent
 {
@@ -16,27 +12,63 @@ export class AlphaBetaAgent extends Agent
   constructor()
   {
     super();
-    //48 bit
-    this.transpositionTable = [];
+
+
+
+    this.ZOBRIST = [ new Array(24), new Array(24) ];
+    //Initalize transpositionTable
+    for(let player = 0; player < 2; player++)
+    {
+      for(let i = 0;i<24;i++)
+      {
+        //Initialize with random 32 bit int
+        this.ZOBRIST[player][i] = getRandomInt(0,( 1 << 31 ) >>> 0);
+      }
+    }
+
+    this.TRANSPOSITION_TABLE_SIZE = 100000;
+
+    //transpositionTable for each player
+    this.transpositionTable = [ new Array(this.TRANSPOSITION_TABLE_SIZE),
+                                new Array(this.TRANSPOSITION_TABLE_SIZE)];
+    this.SCORE_INF = 99999;
+
+    this.SCORE_WIN = 99998;
+
+    this.SCORE_DRAW = 0;
+
+    //Initalize transpositionTable
+    for(let player = 0; player < 2; player++)
+    {
+      for( let i =0; i<this.TRANSPOSITION_TABLE_SIZE; i++ )
+      {
+        this.transpositionTable[player][i] = {hash: -1,
+                                              score: -this.SCORE_INF,
+                                              height: -1};
+      }
+    }
+
+
 
   }
 
   _evaluateConfiguration(player, configuration)
   {
+    this.evalCounts += 1;
 
     const opponent = 1 - player;
 
     if(configuration.hasWon(opponent))
     {
-      return SCORE_LOST;
+      return -this.SCORE_WIN;
     }
     else if(configuration.hasWon(player))
     {
-      return -SCORE_LOST;
+      return this.SCORE_WIN;
     }
     else if(configuration.isDraw())
     {
-      return SCORE_DRAW;
+      return this.SCORE_DRAW;
     }
     else
     {
@@ -47,7 +79,7 @@ export class AlphaBetaAgent extends Agent
       const opponentClosedMills = configuration.getNumberOfClosedMillsForPlayer(opponent);
       //console.log(ownStones,removedStones);
       //TODO open mills? movable freedom?
-      return 10*(ownStones - opponentStones)  + 2*closedMills - opponentClosedMills;
+      return 10 *(ownStones - opponentStones)  + 2 * closedMills - opponentClosedMills;
     }
   }
 
@@ -55,14 +87,41 @@ export class AlphaBetaAgent extends Agent
   //Alpha  = best _already_ explored option for the maximizer
   //Beta   = best _already_ explored option for the minimizer
 
-  miniMax(player, configuration, move, start_depth, depth, alpha, beta)
+  miniMax(player, configuration, move, currentDepth, maxDepth, alpha, beta)
   {
+
     const opponent = 1 - player;
 
+    const configurationHash = configuration.getUnifiedShiftHash(this.ZOBRIST);
 
-    if(depth === 0)
+    const ttLookUp = this.transpositionTable[player][configurationHash % this.TRANSPOSITION_TABLE_SIZE];
+    const currentHeight = maxDepth - currentDepth;
+
+    //Perform transpositionTable Lookup.
+    if(ttLookUp.hash === configurationHash && currentDepth !== 0)
+    {
+      //console.log("Hash was found in TT!");
+      //console.log("Current Height: currentHeight",currentHeight,ttLookUp.height)
+      if(ttLookUp.height >= currentHeight)
+      {
+        //console.log("Using TT",move);
+        //In the past we have seen that position at the same height in the search tree.
+        return {score: ttLookUp.score, move: move};
+      }
+
+    }
+
+
+
+    if(currentDepth === maxDepth)
     {
         const score = this._evaluateConfiguration(player,configuration);
+        if(currentHeight >= ttLookUp.height)
+        {
+          ttLookUp.score = score;
+          ttLookUp.height = currentHeight;
+          ttLookUp.hash = configurationHash;
+        }
         return {score: score, move: move};
     }
     else
@@ -71,45 +130,79 @@ export class AlphaBetaAgent extends Agent
       let maxScore = alpha;
       let bestMove = null;
       let numConfigs = 0;
- 
+
       for(let successorConfiguration of configuration.getSuccessorConfiguration(player))
       {
         numConfigs += 1;
 
         let result = this.miniMax(opponent,
-                                        successorConfiguration.configuration,
-                                        successorConfiguration.move,
-                                        start_depth, depth-1,
-                                        -beta,
-                                        -maxScore
+                                  successorConfiguration.configuration,
+                                  successorConfiguration.move,
+                                  currentDepth+1, maxDepth,
+                                  -beta,
+                                  -maxScore
         );
 
 
 
-        if( (-1 * result.score) > maxScore)
+        if( -result.score > maxScore)
         {
-          maxScore = (-1 * result.score);
+          maxScore = -result.score;
+
           if(maxScore >= beta)
           {
             break;
           }
 
-          if (depth === start_depth)
+          if (currentDepth === 0)
           {
             bestMove = successorConfiguration.move;
           }
         }
+
       }
 
       if(numConfigs === 0)
       {
+        //If were unable to generate a successorConfiguration we lost.
         const score = this._evaluateConfiguration(player,configuration);
+
+        if(currentHeight >= ttLookUp.height)
+        {
+          ttLookUp.score = score;
+          ttLookUp.height = currentHeight;
+          ttLookUp.hash = configurationHash;
+        }
         return {score: score, move: move};
       }
+      else
+      {
 
-      return {score: maxScore, move: bestMove};
+        if(currentHeight >= ttLookUp.height)
+        {
+          ttLookUp.score = maxScore;
+          ttLookUp.height = currentHeight;
+          ttLookUp.hash = configurationHash;
+        }
+        return {score: maxScore, move: bestMove};
+      }
+
     }
 
+  }
+
+  ageTranspositionTable()
+  {
+    for(let player = 0; player < 2; player++)
+    {
+      for( let i =0; i<this.TRANSPOSITION_TABLE_SIZE; i++ )
+      {
+        if(this.transpositionTable[player][i].height > -1)
+        {
+          this.transpositionTable[player][i].height--;
+        }
+      }
+    }
   }
 
   getNextMove(configuration,player,callback)
@@ -118,11 +211,23 @@ export class AlphaBetaAgent extends Agent
     let currentBestMove = null;
     let terminate = false;
 
-    const depth = 6;
-    let result = this.miniMax(player, configuration, null,
-      depth, depth, -SCORE_INF, SCORE_INF);
+    //We must increase reduce the height of the transpositionTable for this move.
+    this.ageTranspositionTable();
 
-    let move = result.move;
+    let bestResult = null;
+    for(let i = 1; i < 9; i++)
+    {
+      this.evalCounts = 0;
+      let maxDepth= i;
+      let startDepth = 0;
+
+      let result = this.miniMax(player, configuration, null,
+        startDepth, maxDepth, -this.SCORE_INF, this.SCORE_INF);
+      console.log(i,result, this.evalCounts);
+      bestResult = result;
+    }
+
+    let move = bestResult.move;
 
     callback(move);
 

@@ -12,4 +12,8 @@ export class Agent
   {
     throw "Abstract Agent is not an KI oracle-agent";
   }
+
+  terminate()
+  {
+  }
 }

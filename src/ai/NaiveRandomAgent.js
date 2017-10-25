@@ -17,13 +17,9 @@ export class NaiveRandomAgent extends Agent
 
     if( configuration.getPhaseForPlayer(player) === NineMensMorrisGameConfiguration.PHASE1 )
     {
-      let i = 0;
+
       do {
         to = getRandomInt(0,23);
-        if(i++ > 1000)
-        {
-          throw "exhausted!";
-        }
       } while( !configuration.playerAllowedToMove(player,from,to) );
 
 
@@ -35,7 +31,6 @@ export class NaiveRandomAgent extends Agent
       do {
         from = stonePositions[getRandomInt(0,stonePositions.length - 1)];
         to = getRandomInt(0,23);
-        console.log('draw2');
       } while( !configuration.playerAllowedToMove(player,from,to) );
     }
 
@@ -44,8 +39,8 @@ export class NaiveRandomAgent extends Agent
         const piecesToRemove = configuration.getRemovablePiecesForPlayer(player);
         const randomIdx = getRandomInt(0,piecesToRemove.length - 1);
         removedStone = piecesToRemove[randomIdx];
-        //console.log('removing',player,removedStone,piecesToRemove);
     }
+    
     let move = new NineMensMorrisMove(player,to,from,removedStone);
 
 

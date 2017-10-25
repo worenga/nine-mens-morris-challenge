@@ -35,7 +35,75 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 
     this._setupGrid();
     this._setupStones();
+    this._setupOverlays();
+  }
 
+
+  _setupOverlays()
+  {
+    this.textOverlayWhiteWon = new fabric.Text('WHITE\nwins!', {
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      left: 0, //Take the block's position
+      top: 0,
+      fill: 'white',
+      stroke: 'black',
+      textAlign: 'center',
+      fontFamily: 'Sans',
+      fontWeight: 'bold',
+      fontSize: '35',
+      hasControls: false,
+      hasBorders: false,
+      strokeWidth: 1,
+      opacity: 0,
+    });
+
+    this.textOverlayBlackWon = new fabric.Text('BLACK\nwins!', {
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      left: 0, //Take the block's position
+      top: 0,
+      fill: 'black',
+      stroke: 'black',
+      textAlign: 'center',
+      fontFamily: 'Sans',
+      fontWeight: 'bold',
+      fontSize: '35',
+      hasControls: false,
+      hasBorders: false,
+      strokeWidth: 1,
+      opacity: 0,
+    });
+
+    this.textOverlayDraw = new fabric.Text('DRAW!', {
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      left: 0, //Take the block's position
+      top: 0,
+      fill: 'black',
+      stroke: 'black',
+      textAlign: 'center',
+      fontFamily: 'Sans',
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+      fontSize: '35',
+      hasControls: false,
+      hasBorders: false,
+      strokeWidth: 1,
+      opacity: 0,
+    });
+
+    this.canvas.add(this.textOverlayWhiteWon);
+    this.canvas.centerObject(this.textOverlayWhiteWon);
+
+    this.canvas.add(this.textOverlayBlackWon);
+    this.canvas.centerObject(this.textOverlayBlackWon);
+
+    this.canvas.add(this.textOverlayDraw);
+    this.canvas.centerObject(this.textOverlayDraw);
   }
 
   _setupGrid() {
@@ -216,6 +284,7 @@ export class NineMensMorrisBoardUi extends EventEmitter {
       if(allowed_positions.indexOf(obj.positionIndex) !== -1)
       {
         obj.fillWhenActive = obj.colorHighlight;
+        obj.setRadius(10);
         obj.fillWhenInactive = obj.colorAllowed;
       }
       else
@@ -225,6 +294,8 @@ export class NineMensMorrisBoardUi extends EventEmitter {
       }
     });
   }
+
+
 
   _createRemovalSign(position,offset=8)
   {
@@ -395,7 +466,7 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 
 		this.canvas.on('object:moving', (e) => {
 			let stone = e.target;
-
+      _this.hintCircles.stopOutAnimation = true;
 
       if(this.removalIndicators.indexOf(e.target) !== -1)
       {
@@ -492,14 +563,14 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 
       let stone = e.target;
 
-			stone.animate('opacity', 1, {
-				onChange: _this.canvas.renderAll.bind(_this.canvas)
-			});
 			stone.setOpacity(1);
+
       if ((stone.player !== 0 && stone.player !== 1) ||
            stone.hoverObject === null ||
            stone.hoverObject.positionIndex === undefined ||
-           !this.triggerEvent("stone:moved", stone.player, stone.currentPositionIndex, stone.hoverObject.positionIndex))
+           !this.triggerEvent("stone:moved", stone.player,
+                                              stone.currentPositionIndex,
+                                              stone.hoverObject.positionIndex))
       {
         if (stone.currentPositionIndex !== null)
         {
@@ -513,7 +584,20 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 			}
 
       this._alignFreeStonePositions();
-			_this.hintCircles.animate('opacity', 0.0);
+
+      _this.hintCircles.stopOutAnimation = false;
+			_this.hintCircles.animate('opacity', 0.0,{
+        duration:250,
+        onChange: _this.canvas.renderAll.bind(_this.canvas),
+        onComplete: function() {
+          //callback code goes here
+          console.log("complete");
+        },
+        abort: function(){
+          return _this.hintCircles.stopOutAnimation;
+        }
+
+      });
 		});
 
 
@@ -580,6 +664,59 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 
 	static get NO_TURN() { //Draw or Win
     return 4;
+  }
+
+  static get OVERLAY_WHITE_WON() {
+    return 5;
+  }
+
+  static get OVERLAY_BLACK_WON() {
+    return 6;
+  }
+
+  static get OVERLAY_DRAW() {
+    return 7;
+  }
+
+
+  hideOverlays()
+  {
+    this.textOverlayDraw.setOpacity(0);
+    this.textOverlayBlackWon.setOpacity(0);
+    this.textOverlayWhiteWon.setOpacity(0);
+  }
+
+  setOverlay(overlay)
+  {
+    let overlayObject = null;
+
+    if(overlay === NineMensMorrisBoardUi.OVERLAY_WHITE_WON)
+    {
+      overlayObject = this.textOverlayWhiteWon;
+    }
+    else if (overlay === NineMensMorrisBoardUi.OVERLAY_BLACK_WON)
+    {
+      overlayObject = this.textOverlayBlackWon;
+    }
+    else if (overlay === NineMensMorrisBoardUi.OVERLAY_DRAW)
+    {
+      overlayObject = this.textOverlayDraw;
+    }
+
+    if(overlayObject !== null)
+    {
+      overlayObject.animate('opacity', 1.0, {
+        duration:250,
+        onChange:this.canvas.renderAll.bind(this.canvas)
+        }
+      );
+    }
+    else
+    {
+      this.hideOverlays();
+    }
+    this.canvas.renderAll();
+
   }
 
   setTurn(turn) {

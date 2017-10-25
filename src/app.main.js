@@ -6,12 +6,14 @@ import {HumanAgent} from './ai/HumanAgent.js';
 import {WorkerProxyAgent} from './ai/WorkerProxyAgent.js';
 
 import Vue from 'vue';
+import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
 
 
 
 
 let app = new Vue({
   el: '#gameboard-container',
+
   data: {
     activePlayerAgents: [null,null],
     availableAgents: [],
@@ -19,13 +21,18 @@ let app = new Vue({
     selectedAgentBlack: null,
   },
 
+  components: {
+    PulseLoader
+  },
+
   mounted: function () {
+
     const CANVAS_ID = 'gameboard';
 
     this.game = new NineMensMorrisGame();
-
     this.ui = new NineMensMorrisBoardUi(CANVAS_ID);
     this.ui.setTurn(NineMensMorrisBoardUi.WHITE_MOVE);
+
 
     this.availableAgents.push({id:'human', name: "Human Player", controller: HumanAgent});
     this.availableAgents.push({id:'random', name:"Random AI", controller: WorkerProxyAgent, args: { bundle: "ai_random.bundle.js"} });
@@ -35,8 +42,21 @@ let app = new Vue({
     this.selectedAgentBlack = 'alphabeta';
 
     this.game.on("game:ended",(isDraw, winner) => {
-      //TODO: Better indicator for this!
-      console.log('game ended! (isDraw, winner)', isDraw, winner);
+      if(isDraw)
+      {
+        this.ui.setOverlay(NineMensMorrisBoardUi.OVERLAY_DRAW);
+      }
+      else
+      {
+        if (winner === NineMensMorrisGame.PLAYER_WHITE)
+        {
+          this.ui.setOverlay(NineMensMorrisBoardUi.OVERLAY_WHITE_WON);
+        }
+        else
+        {
+          this.ui.setOverlay(NineMensMorrisBoardUi.OVERLAY_BLACK_WON);
+        }
+      }
     });
 
       this.game.on("move:move_required", (nextPlayer) => {
@@ -100,6 +120,7 @@ let app = new Vue({
       this.ui.on("stone:moved",(player, from, to) => {
         return this.game.createAndApplyMove(player,from,to);
       });
+
   },
 
   methods:
@@ -107,6 +128,7 @@ let app = new Vue({
     reset: function()
     {
       setTimeout( () => {
+        this.ui.hideOverlays();
         this.game.reset();
       }, 0);
     },
@@ -114,6 +136,7 @@ let app = new Vue({
     undo: function()
     {
       setTimeout( () => {
+        this.ui.hideOverlays();
         if(this.activePlayerAgents[1-this.game.currentTurn].isHuman())
         {
             this.game.undoLastMove(1);
@@ -131,6 +154,11 @@ let app = new Vue({
       let agent = this.availableAgents.filter( (obj) => {return obj.id === id;})[0];
       if(agent)
       {
+        //Terminate old agent:
+        if(this.activePlayerAgents[player] !== null)
+        {
+          this.activePlayerAgents[player].terminate();
+        }
         this.activePlayerAgents[player] = new agent.controller(agent.args);
       }
     },
