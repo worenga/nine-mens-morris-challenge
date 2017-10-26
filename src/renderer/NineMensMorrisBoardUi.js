@@ -683,7 +683,7 @@ export class NineMensMorrisBoardUi extends EventEmitter {
     this.textOverlayWhiteWon.setOpacity(0);
   }
 
-  setOverlay(overlay)
+  setOverlay(overlay,typeOfDraw=null)
   {
     let overlayObject = null;
 

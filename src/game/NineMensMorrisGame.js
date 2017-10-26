@@ -166,9 +166,10 @@ export class NineMensMorrisGame extends EventEmitter {
 			}
 			else
 			{
-				if(++moveHashtable[gameState.getStringRepr()] > 2)
+				if(++moveHashtable[gameState.getStringRepr()] > 3)
 				{
-					return true;
+					//console.log("Move Wise Draw:",gameState.getStringRepr(), moveHashtable[gameState.getStringRepr()])
+					return {draw: true, type: 'move-wise'};
 				}
 			}
 		}
@@ -188,30 +189,49 @@ export class NineMensMorrisGame extends EventEmitter {
 			{
 				if(this.moves[i].removedPiece !== null)
 				{
+
 					millFound = true;
 					break;
 				}
 			}
-			return !millFound;
+			//console.log("No Mine Draw.",!millFound);
+			if(!millFound)
+			{
+				return {draw: true, type: 'move-wise'};
+			}
+			else
+			{
+				return {draw: false};
+			}
 		}
+	}
+
+	_getDrawResult()
+	{
+			if(this.configuration.isDraw())
+			{
+				return {draw: true, type:'no-move'};
+			}else {
+				return this._isMoveWiseDraw();
+			}
 	}
 
 	_proceedOrEndGame()
 	{
 		const whiteWon = this.configuration.hasWon(NineMensMorrisGame.PLAYER_WHITE);
 		const blackWon = this.configuration.hasWon(NineMensMorrisGame.PLAYER_BLACK);
-
+		const drawResult = this._getDrawResult();
 		console.log(whiteWon,blackWon);
 		//Check whether the game configuration indicates a draw, or wheter
 		//we reached a move-wise draw (50 moves without a mill
 		// or three repetitions of the same move)
-		if(this.configuration.isDraw() || this._isMoveWiseDraw())
-		{
-			this.triggerEvent('game:ended', true, undefined);
-		}
-		else if(whiteWon || blackWon)
+		if(whiteWon || blackWon)
 		{
 			this.triggerEvent('game:ended', false, whiteWon ? NineMensMorrisGame.PLAYER_WHITE : NineMensMorrisGame.PLAYER_BLACK);
+		}
+		else if(drawResult.draw)
+		{
+			this.triggerEvent('game:ended', true, undefined, drawResult.type);
 		}
 		else
 		{

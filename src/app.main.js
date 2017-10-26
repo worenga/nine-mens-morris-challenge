@@ -41,10 +41,10 @@ let app = new Vue({
     this.selectedAgentWhite = 'human';
     this.selectedAgentBlack = 'alphabeta';
 
-    this.game.on("game:ended",(isDraw, winner) => {
+    this.game.on("game:ended",(isDraw, winner, typeOfDraw) => {
       if(isDraw)
       {
-        this.ui.setOverlay(NineMensMorrisBoardUi.OVERLAY_DRAW);
+        this.ui.setOverlay(NineMensMorrisBoardUi.OVERLAY_DRAW,typeOfDraw);
       }
       else
       {
@@ -131,8 +131,16 @@ let app = new Vue({
     reset: function()
     {
       setTimeout( () => {
+
+        for(let agent of this.activePlayerAgents)
+        {
+          agent.newGame();
+        }
+
         this.ui.hideOverlays();
+
         this.game.reset();
+
       }, 0);
     },
 
