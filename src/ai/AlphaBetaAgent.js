@@ -77,9 +77,11 @@ export class AlphaBetaAgent extends Agent
       const opponentStones = configuration.getAmountStones(opponent);
       const closedMills = configuration.getNumberOfClosedMillsForPlayer(player);
       const opponentClosedMills = configuration.getNumberOfClosedMillsForPlayer(opponent);
-      //console.log(ownStones,removedStones);
-      //TODO open mills? movable freedom?
-      return 10 *(ownStones - opponentStones)  + 2 * closedMills - opponentClosedMills;
+
+      const ownFreedom = configuration.getDegreeOfFreedomForPlayer(player);
+      const opponentFreedom = configuration.getDegreeOfFreedomForPlayer(opponent);
+
+      return 2*(ownFreedom-opponentFreedom) +  1 * (ownStones - opponentStones)  + 10 * (closedMills - opponentClosedMills);
     }
   }
 
@@ -131,7 +133,7 @@ export class AlphaBetaAgent extends Agent
       let bestMove = null;
       let numConfigs = 0;
 
-      for(let successorConfiguration of configuration.getSuccessorConfiguration(player))
+      for(let successorConfiguration of configuration.generateSuccessorConfiguration(player))
       {
         numConfigs += 1;
 

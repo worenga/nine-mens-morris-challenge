@@ -198,7 +198,7 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 
     const hintCircleParams = {
       strokeWidth: 2,
-      radius: 5,
+      radius: 10,
 
       colorAllowed: '#6dff05',
       colorNotAllowed: '#ff0000',
@@ -284,7 +284,6 @@ export class NineMensMorrisBoardUi extends EventEmitter {
       if(allowed_positions.indexOf(obj.positionIndex) !== -1)
       {
         obj.fillWhenActive = obj.colorHighlight;
-        obj.setRadius(10);
         obj.fillWhenInactive = obj.colorAllowed;
       }
       else
@@ -493,10 +492,12 @@ export class NineMensMorrisBoardUi extends EventEmitter {
         {
 					hoverObject = obj;
 					obj.set({fill: obj.fillWhenActive});
+          obj.setRadius(12);
 				}
         else
         {
 					obj.set({fill: obj.fillWhenInactive});
+          obj.setRadius(10);
 				}
 
 			});
@@ -589,10 +590,6 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 			_this.hintCircles.animate('opacity', 0.0,{
         duration:250,
         onChange: _this.canvas.renderAll.bind(_this.canvas),
-        onComplete: function() {
-          //callback code goes here
-          console.log("complete");
-        },
         abort: function(){
           return _this.hintCircles.stopOutAnimation;
         }

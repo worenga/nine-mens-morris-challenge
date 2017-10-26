@@ -23,7 +23,7 @@ export class NineMensMorrisGame extends EventEmitter {
 			this.initializationParams.removedStones
 		);
 		this.moves = [];
-		this.triggerEvent("boardstate:changed");
+		this.triggerEvent("boardstate:changed",null);
 		this.triggerEvent("game:reset");
 		this._proceedOrEndGame();
 	}

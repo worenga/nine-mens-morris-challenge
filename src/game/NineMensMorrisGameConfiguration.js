@@ -20,7 +20,38 @@ const millBitmasks = [
   ( 1 <<  2) | ( 1 <<  3) | ( 1 <<  4)
 ];
 
+
+const freedomMasks = [
+    (1 <<  7) | (1 <<  1)                              ,//0
+    (1 <<  0) | (1 <<  2) | (1 <<  9)                  ,//1
+    (1 <<  1) | (1 <<  3)                              ,//2
+    (1 <<  2) | (1 <<  4) | (1 << 11)                  ,//3
+    (1 <<  3) | (1 <<  5)                              ,//4
+    (1 <<  6) | (1 <<  4) | (1 << 13)                  ,//5
+    (1 <<  7) | (1 <<  5)                              ,//6
+    (1 <<  0) | (1 <<  6) | (1 << 15)                  ,//7
+
+    (1 <<  9) | (1 << 15)                              ,//8
+    (1 <<  8) | (1 << 10) | (1 <<  1) | (1 << 17)      ,//9
+    (1 <<  9) | (1 << 11)                              ,//10
+    (1 << 10) | (1 << 12) | (1 << 19) | (1 <<  3)      ,//11
+    (1 << 11) | (1 << 13                   )           ,//12
+    (1 << 12) | (1 << 14) | (1 << 21) | (1 <<  5)      ,//13
+    (1 << 13) | (1 << 15)                              ,//14
+    (1 << 8) | (1 << 14) | (1 << 23) | (1 <<  7)       ,//15
+
+    (1 <<  23) | (1 << 17)                             ,//16
+    (1 <<  16) | (1 << 18) | (1 << 9)                  ,//17
+    (1 <<  17) | (1 << 19)                             ,//18
+    (1 <<  18) | (1 << 20) | (1 << 11)                 ,//19
+    (1 <<  19) | (1 << 21)                             ,//20
+    (1 <<  20) | (1 << 22) | (1 << 13)                 ,//21
+    (1 <<  21) | (1 << 23)                             ,//22
+    (1 <<  22) | (1 << 16) | (1 << 15)                 ,//23
+];
+
 /*
+
   Data structure for our mill game:
 
   We represent the board state with where the nth bit (from the right) is
@@ -88,6 +119,19 @@ export class NineMensMorrisGameConfiguration
       this.removedStones[opponent]--;
     }
 
+  }
+
+  getDegreeOfFreedomForPlayer(player)
+  {
+    const positions = this.getPositionsForPlayer(player);
+    const freePositions = this.getFreePositionVector();
+    let playerFreedomMask = 0;
+
+    for(let position of positions)
+    {
+      playerFreedomMask |= freedomMasks[position];
+    }
+    return bitCount(freePositions&playerFreedomMask);
   }
 
 
@@ -192,11 +236,177 @@ export class NineMensMorrisGameConfiguration
 		return this.getClosedMillsIndicesForPlayer(player).length;
 	}
 
-
-  _getShiftedStoneConfiguration(shiftByBit)
+  static _getInnerOuterSwappedConfiguration(left,right)
   {
+    //Swap rings 1 and 3:
+    const newLeft = ((left >> 0) & 255) << 16 | (left & (255 << 8)) | (left >> 16) & 255;
+    const newRight = ((left >> 0) & 255) << 16 | (left & (255 << 8)) | (left >> 16) & 255;
+
+    return [newLeft,newRight];
+  }
+
+  static _getHorizontalMirroredConfiguration(left,right)
+  {
+    const horizontalMask = ~(
+      (1 << 0) | (1 << 1) | (1 << 2) | (1 << 8) | (1 << 9) | (1 << 10) |
+      (1 << 8) | (1 << 9) | (1 << 10) | (1 << 12) | (1 << 13) | (1 << 14) |
+      (1 << 16) | (1 << 17) | (1 << 18) | (1 << 20) | (1 << 21) | (1 << 22)
+    );
+
+    //Zero out vertical lines left/right
+    let newLeft = left & horizontalMask;
+    let newRight = left & horizontalMask;
+
+    newLeft |= (left & (1 <<  0)) << 6; // set value of 0 to 4
+    newLeft |= (left & (1 <<  6)) >> 6; // ... and vice versa
+
+    newLeft |= (left & (1 <<  1)) << 4; // set value of 0 to 4
+    newLeft |= (left & (1 <<  5)) >> 4; // ... and vice versa
+
+    newLeft |= (left & (1 <<  2)) << 2; // set value of 0 to 4
+    newLeft |= (left & (1 <<  4)) >> 2; // ... and vice versa
+
+
+    newLeft |= (left & (1 <<  8)) << 6; // set value of 8 to 14
+    newLeft |= (left & (1 <<  14)) >> 6; // ... and vice versa
+
+    newLeft |= (left & (1 <<  9)) << 4; // set value of 9 to 13
+    newLeft |= (left & (1 <<  13)) >> 4; // ... and vice versa
+
+    newLeft |= (left & (1 <<  10)) << 2; // set value of 10 to 12
+    newLeft |= (left & (1 <<  12)) >> 2; // ... and vice versa
+
+
+    newLeft |= (left & (1 <<  16)) << 6; // set value of 8 to 14
+    newLeft |= (left & (1 <<  22)) >> 6; // ... and vice versa
+
+    newLeft |= (left & (1 <<  17)) << 4; // set value of 9 to 13
+    newLeft |= (left & (1 <<  21)) >> 4; // ... and vice versa
+
+    newLeft |= (left & (1 <<  18)) << 2; // set value of 10 to 12
+    newLeft |= (left & (1 <<  20)) >> 2; // ... and vice versa
+
+
+
+
+    newRight |= (right & (1 <<  0)) << 6; // set value of 0 to 4
+    newRight |= (right & (1 <<  6)) >> 6; // ... and vice versa
+
+    newRight |= (right & (1 <<  1)) << 4; // set value of 0 to 4
+    newRight |= (right & (1 <<  5)) >> 4; // ... and vice versa
+
+    newRight |= (right & (1 <<  2)) << 2; // set value of 0 to 4
+    newRight |= (right & (1 <<  4)) >> 2; // ... and vice versa
+
+
+    newRight |= (right & (1 <<  8)) << 6; // set value of 8 to 14
+    newRight |= (right & (1 <<  14)) >> 6; // ... and vice versa
+
+    newRight |= (right & (1 <<  9)) << 4; // set value of 9 to 13
+    newRight |= (right & (1 <<  13)) >> 4; // ... and vice versa
+
+    newRight |= (right & (1 <<  10)) << 2; // set value of 10 to 12
+    newRight |= (right & (1 <<  12)) >> 2; // ... and vice versa
+
+
+    newRight |= (right & (1 <<  16)) << 6; // set value of 8 to 14
+    newRight |= (right & (1 <<  22)) >> 6; // ... and vice versa
+
+    newRight |= (right & (1 <<  17)) << 4; // set value of 9 to 13
+    newRight |= (right & (1 <<  21)) >> 4; // ... and vice versa
+
+    newRight |= (right & (1 <<  18)) << 2; // set value of 10 to 12
+    newRight |= (right & (1 <<  20)) >> 2; // ... and vice versa
+
+    return [newLeft,newRight];
+  }
+
+  static _getVerticalMirroredConfiguration(left,right)
+  {
+
+    const verticalMask = ~(
+      (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 6) | (1 << 7) |
+      (1 << 8) | (1 << 10) | (1 << 11) | (1 << 12) | (1 << 14) | (1 << 15) |
+      (1 << 16) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 22) | (1 << 23)
+    );
+
+    //Zero out vertical lines left/right
+    let newLeft = left & verticalMask;
+    let newRight = left & verticalMask;
+
+    newLeft |= (left & (1 <<  2)) >> 2; // set value of 2 to 0
+    newLeft |= (left & (1 <<  0)) << 2; // ... and vice versa
+
+    newLeft |= (left & (1 <<  3)) << 4; // set value of 3 to 7
+    newLeft |= (left & (1 <<  7)) >> 4; // ... and vice versa
+
+    newLeft |= (left & (1 <<  4)) << 2; // set value of 4 to 6
+    newLeft |= (left & (1 <<  6)) >> 2; // ... and vice versa
+
+
+    newLeft |= (left & (1 << 18)) >> 2; // set value of 18 to 16
+    newLeft |= (left & (1 << 16)) << 2; // ... and vice versa
+
+    newLeft |= (left & (1 << 19)) << 4; // set value of 19 to 23
+    newLeft |= (left & (1 << 23)) >> 4; // ... and vice versa
+
+    newLeft |= (left & (1 << 20)) << 2;  // set value of 20 to 22
+    newLeft |= (left & (1 << 22)) >> 2; // ... and vice versa
+
+
+    newLeft |= (left & (1 << 10)) >> 2; // set value of 10 to 8
+    newLeft |= (left & (1 <<  8)) << 2; // ... and vice versa
+
+    newLeft |= (left & (1 << 11)) << 4; // set value of 11 to 15
+    newLeft |= (left & (1 << 15)) >> 4; // ... and vice versa
+
+    newLeft |= (left & (1 << 12)) << 2;  // set value of 12 to 14
+    newLeft |= (left & (1 << 14)) >> 2; // ... and vice versa
+
+
+
+    newRight |= (right & (1 <<  2)) >> 2; // set value of 2 to 0
+    newRight |= (right & (1 <<  0)) << 2; // ... and vice versa
+
+    newRight |= (right & (1 <<  3)) << 4; // set value of 3 to 7
+    newRight |= (right & (1 <<  7)) >> 4; // ... and vice versa
+
+    newRight |= (right & (1 <<  4)) << 2; // set value of 4 to 6
+    newRight |= (right & (1 <<  6)) >> 2; // ... and vice versa
+
+
+    newRight |= (right & (1 << 18)) >> 2; // set value of 18 to 16
+    newRight |= (right & (1 << 16)) << 2; // ... and vice versa
+
+    newRight |= (right & (1 << 19)) << 4; // set value of 19 to 23
+    newRight |= (right & (1 << 23)) >> 4; // ... and vice versa
+
+    newRight |= (right & (1 << 20)) << 2;  // set value of 20 to 22
+    newRight |= (right & (1 << 22)) >> 2; // ... and vice versa
+
+
+    newRight |= (right & (1 << 10)) >> 2; // set value of 10 to 8
+    newRight |= (right & (1 <<  8)) << 2; // ... and vice versa
+
+    newRight |= (right & (1 << 11)) << 4; // set value of 11 to 15
+    newRight |= (right & (1 << 15)) >> 4; // ... and vice versa
+
+    newRight |= (right & (1 << 12)) << 2;  // set value of 12 to 14
+    newRight |= (right & (1 << 14)) >> 2; // ... and vice versa
+
+
+    return [newLeft,newRight];
+  }
+
+
+  static _getShiftedStoneConfiguration(shiftByBit, left, right)
+  {
+    if(shiftByBit === 0)
+    {
+      return [left,right];
+    }
     //We have 3 rings, shift them accordingly.
-    let left = this.stones[0], right=this.stones[1];
+    //let left = this.stones[0], right=this.stones[1];
 
     const LeftUpper = (left >> 0) & 255;
     const LeftMiddle = (left >> 8) & 255;
@@ -220,24 +430,41 @@ export class NineMensMorrisGameConfiguration
   }
 
 
-  //Compute equivalent rotations and
+
+
+
+  //Compute equivalent rotations and mirrorings
   getUnifiedShiftHash(zobristTable)
   {
 
-    let maxLeft = this.stones[0];
-    let maxRight = this.stones[1];
+    //So much symmetry...
 
     let bestRotationLeft = this.stones[0];
     let bestRotationRight = this.stones[1];
 
-    for(let shiftBy = 2; shiftBy < 8; shiftBy += 2)
+    let verticalMirroredConfiguration = NineMensMorrisGameConfiguration._getVerticalMirroredConfiguration(this.stones[0],this.stones[1]);
+    let horizontalMirroredConfiguration = NineMensMorrisGameConfiguration._getHorizontalMirroredConfiguration(this.stones[0],this.stones[1]);
+
+    for(let configurationToMutate of [
+                                  [this.stones[0],this.stones[1]],
+                                   verticalMirroredConfiguration,
+                                   horizontalMirroredConfiguration,
+                                   NineMensMorrisGameConfiguration._getInnerOuterSwappedConfiguration(this.stones[0],this.stones[1]),
+                                   NineMensMorrisGameConfiguration._getInnerOuterSwappedConfiguration(verticalMirroredConfiguration[0],verticalMirroredConfiguration[1]),
+                                   NineMensMorrisGameConfiguration._getInnerOuterSwappedConfiguration(horizontalMirroredConfiguration[0],horizontalMirroredConfiguration[1])
+                                  ])
     {
-        let shifted = this._getShiftedStoneConfiguration(shiftBy);
-        if(shifted[0]>maxLeft || (shifted[0] === maxLeft && shifted[1] > maxRight))
-        {
-          bestRotationLeft = shifted[0];
-          bestRotationRight= shifted[1];
-        }
+
+      for(let shiftBy = 0; shiftBy < 8; shiftBy += 2)
+      {
+          let shifted = NineMensMorrisGameConfiguration._getShiftedStoneConfiguration(shiftBy,configurationToMutate[0],configurationToMutate[1]);
+          if(shifted[0]>bestRotationLeft || (shifted[0] === bestRotationLeft && shifted[1] > bestRotationRight))
+          {
+            bestRotationLeft = shifted[0];
+            bestRotationRight= shifted[1];
+          }
+      }
+
     }
 
     return this._getHash(zobristTable, bestRotationLeft, bestRotationRight, this.removedStones[0],this.removedStones[1]);
@@ -289,7 +516,7 @@ export class NineMensMorrisGameConfiguration
     return this.removedStones[player];
   }
 
-  canBeMovedTo(freePositions,level,ringPos,player)
+  canBeMoved(freePositions,level,ringPos,player)
   {
     const idx = level * 8 + ringPos;
     if( (freePositions >> idx) & 1 )
@@ -454,11 +681,11 @@ export class NineMensMorrisGameConfiguration
       //is able to move without violating the constraints of the game
       const freePositions = this.getFreePositionVector();
 
-      for ( let level=0; level < 2; level++ )
+      for ( let level=0; level < 3; level++ )
       {
         for ( let ringPos = 0; ringPos < 8; ringPos++ )
         {
-          if(this.canBeMovedTo(freePositions,level,ringPos, player))
+          if(this.canBeMoved(freePositions,level, ringPos, player))
           {
             return true;
           }
@@ -471,10 +698,8 @@ export class NineMensMorrisGameConfiguration
       //to occupy all free positions:
       return true;
     }
-    else
-    {
-      return false;
-    }
+
+    return false;
   }
 
   encodePosToHumanReadable(pos)
@@ -550,10 +775,11 @@ export class NineMensMorrisGameConfiguration
     return `${this.stones[0]}-${this.stones[1]}`;
   }
 
-  * getSuccessorConfiguration(player)
+  * generateSuccessorConfiguration(player)
   {
     //If we are in P1, we can essentially move anywhere where it is free:
-    if(this.getPhaseForPlayer(player) == NineMensMorrisGameConfiguration.PHASE1)
+    const phase = this.getPhaseForPlayer(player);
+    if(phase == NineMensMorrisGameConfiguration.PHASE1)
     {
       const from = null;
       let targets = getSetBitIndices(this.getFreePositionVector(),24);
@@ -568,18 +794,24 @@ export class NineMensMorrisGameConfiguration
           for(let removable of removables)
           {
             tmpMove.removedPiece = removable;
-            yield { move: Object.assign({},tmpMove), configuration: this.constructFollowUpConfiguration(player,tmpMove)};
+            yield {
+              move: tmpMove,
+              configuration: this.constructFollowUpConfiguration(player,tmpMove)
+            };
           }
 
         }
         else
         {
-          yield {move: Object.assign({},tmpMove), configuration: this.constructFollowUpConfiguration(player,tmpMove)};
+          yield {
+            move: tmpMove,
+            configuration: this.constructFollowUpConfiguration(player,tmpMove)
+          };
         }
       }
 
     }
-    else if(this.getPhaseForPlayer(player) >= NineMensMorrisGameConfiguration.PHASE2)
+    else if(phase >= NineMensMorrisGameConfiguration.PHASE2)
     {
       const origins = getSetBitIndices(this.stones[player],24);
       const targets = getSetBitIndices(this.getFreePositionVector(),24);
@@ -602,13 +834,19 @@ export class NineMensMorrisGameConfiguration
             for(let removable of removables)
             {
               tmpMove.removedPiece = removable;
-              yield {move: Object.assign({},tmpMove), configuration: this.constructFollowUpConfiguration(player,tmpMove)};
+              yield {
+                move: tmpMove,
+                configuration: this.constructFollowUpConfiguration(player,tmpMove)
+              };
             }
 
           }
           else
           {
-            yield {move: Object.assign({},tmpMove), configuration: this.constructFollowUpConfiguration(player,tmpMove)};
+            yield {
+              move: tmpMove,
+              configuration: this.constructFollowUpConfiguration(player,tmpMove)
+            };
           }
 
         }

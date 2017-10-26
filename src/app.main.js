@@ -59,67 +59,70 @@ let app = new Vue({
       }
     });
 
-      this.game.on("move:move_required", (nextPlayer) => {
-        setTimeout( () => {
-          //Prevent bogus side effects when reset or undo
-          //was pressed and currentTurn might have been reset.
-          if(this.game.currentTurn != nextPlayer)
-          {
-            return ;
-          }
-          this.enableNextPlayer(nextPlayer);
-        }, 0 );
-      });
-
-      this.ui.on( "stone:remove", (position) => {
-        this.game.removeStone(position);
-        return true;
-      });
-
-      this.game.on("boardstate:changed",() => {
-        const config = this.game.getConfiguration();
-        this.ui.setStones(config.getPositionsForPlayer(NineMensMorrisGame.PLAYER_WHITE),
-                          config.getPositionsForPlayer(NineMensMorrisGame.PLAYER_BLACK),
-                          config.getRemovedStonesForPlayer(NineMensMorrisGame.PLAYER_WHITE),
-                          config.getRemovedStonesForPlayer(NineMensMorrisGame.PLAYER_BLACK)
-        );
-      });
-
-      this.game.on("move:undone",(move) => {
-        //TODO
-      });
-
-      this.game.on("move:removal_required",(player) => {
-
-        this.ui.enableRemovalIndicatorsFor(
-            this.game.getConfiguration().getRemovablePiecesForPlayer(player));
-
-        if (player === NineMensMorrisGame.PLAYER_WHITE)
+    this.game.on("move:move_required", (nextPlayer) => {
+      setTimeout( () => {
+        //Prevent bogus side effects when reset or undo
+        //was pressed and currentTurn might have been reset.
+        if(this.game.currentTurn != nextPlayer)
         {
-          this.ui.setTurn(NineMensMorrisBoardUi.WHITE_REMOVE);
+          return ;
         }
-        else
+        this.enableNextPlayer(nextPlayer);
+      }, 0 );
+    });
+
+    this.ui.on( "stone:remove", (position) => {
+      this.game.removeStone(position);
+      return true;
+    });
+
+    this.game.on("boardstate:changed",() => {
+      const config = this.game.getConfiguration();
+      this.ui.setStones(config.getPositionsForPlayer(NineMensMorrisGame.PLAYER_WHITE),
+                        config.getPositionsForPlayer(NineMensMorrisGame.PLAYER_BLACK),
+                        config.getRemovedStonesForPlayer(NineMensMorrisGame.PLAYER_WHITE),
+                        config.getRemovedStonesForPlayer(NineMensMorrisGame.PLAYER_BLACK)
+      );
+    });
+
+    this.game.on("move:undone",(move) => {
+      this.ui.hideOverlays();
+    });
+
+    this.game.on("move:removal_required",(player) => {
+
+      this.ui.enableRemovalIndicatorsFor(
+          this.game.getConfiguration().getRemovablePiecesForPlayer(player));
+
+      if (player === NineMensMorrisGame.PLAYER_WHITE)
+      {
+        this.ui.setTurn(NineMensMorrisBoardUi.WHITE_REMOVE);
+      }
+      else
+      {
+        this.ui.setTurn(NineMensMorrisBoardUi.BLACK_REMOVE);
+      }
+
+    });
+
+    this.ui.on("stone:begin_move",(player, from) => {
+      let allowed_positions = [];
+
+      allowed_positions.push(from);
+
+      for(let to = 0; to < 24; to++)
+      {
+        if(this.game.playerAllowedToMove(player, from, to))
         {
-          this.ui.setTurn(NineMensMorrisBoardUi.BLACK_REMOVE);
+          allowed_positions.push(to);
         }
+      }
+      this.ui.setAllowedHints(allowed_positions);
+    });
 
-      });
-
-      this.ui.on("stone:begin_move",(player, from) => {
-        let allowed_positions = [];
-        for(let to = 0; to < 24; to++)
-        {
-          if(this.game.playerAllowedToMove(player, from, to))
-          {
-            allowed_positions.push(to);
-          }
-        }
-        this.ui.setAllowedHints(allowed_positions);
-      });
-
-      this.ui.on("stone:moved",(player, from, to) => {
-        return this.game.createAndApplyMove(player,from,to);
-      });
+    this.ui.on("stone:moved",(player, from, to) => {
+      return this.game.createAndApplyMove(player,from,to);
+    });
 
   },
 
@@ -136,7 +139,6 @@ let app = new Vue({
     undo: function()
     {
       setTimeout( () => {
-        this.ui.hideOverlays();
         if(this.activePlayerAgents[1-this.game.currentTurn].isHuman())
         {
             this.game.undoLastMove(1);
