@@ -1,12 +1,5 @@
-import {NineMensMorrisGameConfiguration} from './game/NineMensMorrisGameConfiguration.js';
 import {NaiveRandomAgent} from './ai/NaiveRandomAgent.js';
+import {AgentWrapper} from './helpers/AgentWrapper.js';
 
-let agent = new NaiveRandomAgent();
-
-onmessage = function(oEvent) {
-  const configuration = Object.assign(new NineMensMorrisGameConfiguration(),oEvent.data[1]);
-  const player = oEvent.data[2];
-  agent.getNextMove(configuration,player, function(computedMove) {
-      postMessage(computedMove);
-  });
-};
+let agentWrapper = new AgentWrapper(new NaiveRandomAgent());
+onmessage = agentWrapper.onMessage.bind(agentWrapper);

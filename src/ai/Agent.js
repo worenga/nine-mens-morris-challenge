@@ -1,7 +1,8 @@
 export class Agent
 {
-  constructor()
-  {}
+  constructor() {}
+
+  newGame() {}
 
   isHuman()
   {
@@ -13,7 +14,5 @@ export class Agent
     throw "Abstract Agent is not an KI oracle-agent";
   }
 
-  terminate()
-  {
-  }
+  terminate() {}
 }

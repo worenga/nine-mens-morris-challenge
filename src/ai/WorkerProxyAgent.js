@@ -13,6 +13,11 @@ export class WorkerProxyAgent extends Agent
     this.worker = new Worker(options.bundle);
   }
 
+  newGame()
+  {
+    this.worker.postMessage(["requestReinitialization"]);
+  }
+
   getNextMove(configuration,player,callback)
   {
     this.worker.onmessage = function(eData){
@@ -20,7 +25,7 @@ export class WorkerProxyAgent extends Agent
     };
     this.worker.postMessage(["requestAgentMove",configuration,player]);
   }
-  
+
   terminate()
   {
     this.worker.terminate();

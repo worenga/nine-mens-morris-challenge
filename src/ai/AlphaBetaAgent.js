@@ -9,13 +9,9 @@ import {Agent} from './Agent.js';
 export class AlphaBetaAgent extends Agent
 {
 
-  constructor()
+
+  _initializeZobrist()
   {
-    super();
-
-
-
-    this.ZOBRIST = [ new Array(24), new Array(24) ];
     //Initalize transpositionTable
     for(let player = 0; player < 2; player++)
     {
@@ -25,19 +21,10 @@ export class AlphaBetaAgent extends Agent
         this.ZOBRIST[player][i] = getRandomInt(0,( 1 << 31 ) >>> 0);
       }
     }
+  }
 
-    this.TRANSPOSITION_TABLE_SIZE = 100000;
-
-    //transpositionTable for each player
-    this.transpositionTable = [ new Array(this.TRANSPOSITION_TABLE_SIZE),
-                                new Array(this.TRANSPOSITION_TABLE_SIZE)];
-    this.SCORE_INF = 99999;
-
-    this.SCORE_WIN = 99998;
-
-    this.SCORE_DRAW = 0;
-
-    //Initalize transpositionTable
+  _initializeTranspositionTable()
+  {
     for(let player = 0; player < 2; player++)
     {
       for( let i =0; i<this.TRANSPOSITION_TABLE_SIZE; i++ )
@@ -47,9 +34,38 @@ export class AlphaBetaAgent extends Agent
                                               height: -1};
       }
     }
+  }
+
+  reinitializeState()
+  {
+    this._initializeZobrist();
+    this._initializeTranspositionTable();
+  }
+
+  constructor()
+  {
+    super();
+
+    this.ZOBRIST = [ new Array(24), new Array(24) ];
+
+
+    this.TRANSPOSITION_TABLE_SIZE = 100000;
+
+    //transpositionTable for each player
+    this.transpositionTable = [ new Array(this.TRANSPOSITION_TABLE_SIZE),
+                                new Array(this.TRANSPOSITION_TABLE_SIZE)];
 
 
 
+    this.reinitializeState();
+
+    this.SCORE_INF = 99999;
+
+    this.SCORE_WIN = 99998;
+
+    this.SCORE_DRAW = 0;
+
+    //Initalize transpositionTable
   }
 
   _evaluateConfiguration(player, configuration)
@@ -57,7 +73,6 @@ export class AlphaBetaAgent extends Agent
     this.evalCounts += 1;
 
     const opponent = 1 - player;
-
     if(configuration.hasWon(opponent))
     {
       return -this.SCORE_WIN;
@@ -81,7 +96,8 @@ export class AlphaBetaAgent extends Agent
       const ownFreedom = configuration.getDegreeOfFreedomForPlayer(player);
       const opponentFreedom = configuration.getDegreeOfFreedomForPlayer(opponent);
 
-      return 2*(ownFreedom-opponentFreedom) +  1 * (ownStones - opponentStones)  + 10 * (closedMills - opponentClosedMills);
+      const score = 2*(ownFreedom-opponentFreedom) +  1 * (ownStones - opponentStones)  + 10 * (closedMills - opponentClosedMills);
+      return score;
     }
   }
 
@@ -91,7 +107,6 @@ export class AlphaBetaAgent extends Agent
 
   miniMax(player, configuration, move, currentDepth, maxDepth, alpha, beta)
   {
-
     const opponent = 1 - player;
 
     const configurationHash = configuration.getUnifiedShiftHash(this.ZOBRIST);
@@ -102,11 +117,8 @@ export class AlphaBetaAgent extends Agent
     //Perform transpositionTable Lookup.
     if(ttLookUp.hash === configurationHash && currentDepth !== 0)
     {
-      //console.log("Hash was found in TT!");
-      //console.log("Current Height: currentHeight",currentHeight,ttLookUp.height)
       if(ttLookUp.height >= currentHeight)
       {
-        //console.log("Using TT",move);
         //In the past we have seen that position at the same height in the search tree.
         return {score: ttLookUp.score, move: move};
       }
@@ -114,21 +126,23 @@ export class AlphaBetaAgent extends Agent
     }
 
 
-
     if(currentDepth === maxDepth)
     {
-        const score = this._evaluateConfiguration(player,configuration);
-        if(currentHeight >= ttLookUp.height)
-        {
-          ttLookUp.score = score;
-          ttLookUp.height = currentHeight;
-          ttLookUp.hash = configurationHash;
-        }
-        return {score: score, move: move};
+
+      const score = this._evaluateConfiguration(player,configuration);
+
+      if(currentHeight >= ttLookUp.height)
+      {
+        ttLookUp.score = score;
+        ttLookUp.height = currentHeight;
+        ttLookUp.hash = configurationHash;
+      }
+
+      return {score: score, move: move};
+
     }
     else
     {
-
       let maxScore = alpha;
       let bestMove = null;
       let numConfigs = 0;
@@ -144,8 +158,6 @@ export class AlphaBetaAgent extends Agent
                                   -beta,
                                   -maxScore
         );
-
-
 
         if( -result.score > maxScore)
         {
@@ -217,15 +229,14 @@ export class AlphaBetaAgent extends Agent
     this.ageTranspositionTable();
 
     let bestResult = null;
-    for(let i = 1; i < 9; i++)
+    for(let i = 1; i < 7; i++)
     {
       this.evalCounts = 0;
       let maxDepth= i;
       let startDepth = 0;
-
       let result = this.miniMax(player, configuration, null,
         startDepth, maxDepth, -this.SCORE_INF, this.SCORE_INF);
-      console.log(i,result, this.evalCounts);
+      console.log("result depth", i,result, this.evalCounts);
       bestResult = result;
     }
 

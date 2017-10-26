@@ -201,6 +201,7 @@ export class NineMensMorrisGame extends EventEmitter {
 		const whiteWon = this.configuration.hasWon(NineMensMorrisGame.PLAYER_WHITE);
 		const blackWon = this.configuration.hasWon(NineMensMorrisGame.PLAYER_BLACK);
 
+		console.log(whiteWon,blackWon);
 		//Check whether the game configuration indicates a draw, or wheter
 		//we reached a move-wise draw (50 moves without a mill
 		// or three repetitions of the same move)

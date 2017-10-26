@@ -35,7 +35,7 @@ const freedomMasks = [
     (1 <<  8) | (1 << 10) | (1 <<  1) | (1 << 17)      ,//9
     (1 <<  9) | (1 << 11)                              ,//10
     (1 << 10) | (1 << 12) | (1 << 19) | (1 <<  3)      ,//11
-    (1 << 11) | (1 << 13                   )           ,//12
+    (1 << 11) | (1 << 13)                              ,//12
     (1 << 12) | (1 << 14) | (1 << 21) | (1 <<  5)      ,//13
     (1 << 13) | (1 << 15)                              ,//14
     (1 << 8) | (1 << 14) | (1 << 23) | (1 <<  7)       ,//15
@@ -239,9 +239,8 @@ export class NineMensMorrisGameConfiguration
   static _getInnerOuterSwappedConfiguration(left,right)
   {
     //Swap rings 1 and 3:
-    const newLeft = ((left >> 0) & 255) << 16 | (left & (255 << 8)) | (left >> 16) & 255;
-    const newRight = ((left >> 0) & 255) << 16 | (left & (255 << 8)) | (left >> 16) & 255;
-
+    const newLeft = (((left >> 0) & 255) << 16) | (left & (255 << 8)) | ((left >> 16) & 255);
+    const newRight = (((right >> 0) & 255) << 16) | (right & (255 << 8)) | ((right >> 16) & 255);
     return [newLeft,newRight];
   }
 
@@ -255,7 +254,7 @@ export class NineMensMorrisGameConfiguration
 
     //Zero out vertical lines left/right
     let newLeft = left & horizontalMask;
-    let newRight = left & horizontalMask;
+    let newRight = right & horizontalMask;
 
     newLeft |= (left & (1 <<  0)) << 6; // set value of 0 to 4
     newLeft |= (left & (1 <<  6)) >> 6; // ... and vice versa
@@ -332,7 +331,7 @@ export class NineMensMorrisGameConfiguration
 
     //Zero out vertical lines left/right
     let newLeft = left & verticalMask;
-    let newRight = left & verticalMask;
+    let newRight = right & verticalMask;
 
     newLeft |= (left & (1 <<  2)) >> 2; // set value of 2 to 0
     newLeft |= (left & (1 <<  0)) << 2; // ... and vice versa
@@ -416,15 +415,18 @@ export class NineMensMorrisGameConfiguration
     const RightMiddle = (right >> 8) & 255;
     const RightLower = (right >> 16) & 255;
 
-    const circShiftLeftUpper = LeftUpper << shiftByBit | LeftUpper >> (8 - shiftByBit);
-    const circShiftLeftMiddle = LeftMiddle << shiftByBit | LeftMiddle >> (8 - shiftByBit);
-    const circShiftLeftLower = LeftLower << shiftByBit | LeftLower >> (8 - shiftByBit);
-    const shiftedLeft = circShiftLeftUpper | (circShiftLeftMiddle << 8) | (circShiftLeftLower << 16);
 
-    const circShiftRightUpper = RightUpper << shiftByBit | RightUpper >> (8 - shiftByBit);
-    const circShiftRightMiddle = RightMiddle << shiftByBit | RightMiddle >> (8 - shiftByBit);
-    const circShiftRightLower = RightLower << shiftByBit | RightLower >> (8 - shiftByBit);
-    const shiftedRight = circShiftRightUpper | (circShiftRightMiddle << 8) | (circShiftRightLower << 16);
+    const circShiftLeftUpper = ((LeftUpper << shiftByBit) | (LeftUpper >> (8 - shiftByBit))) &255;
+    const circShiftLeftMiddle = ((LeftMiddle << shiftByBit) | (LeftMiddle >> (8 - shiftByBit))) &255;
+    const circShiftLeftLower = ((LeftLower << shiftByBit) | (LeftLower >> (8 - shiftByBit))) &255;
+    const shiftedLeft = circShiftLeftUpper  | (circShiftLeftMiddle << 8) | (circShiftLeftLower << 16);
+
+
+    const circShiftRightUpper = ((RightUpper << shiftByBit) | (RightUpper >> (8 - shiftByBit))) &255;
+    const circShiftRightMiddle = ((RightMiddle << shiftByBit) | (RightMiddle >> (8 - shiftByBit))) &255;
+    const circShiftRightLower = ((RightLower << shiftByBit) | (RightLower >> (8 - shiftByBit))) &255;
+    const shiftedRight = circShiftRightUpper  | (circShiftRightMiddle << 8) | (circShiftRightLower << 16);
+
 
     return [shiftedLeft,shiftedRight];
   }
@@ -457,8 +459,11 @@ export class NineMensMorrisGameConfiguration
 
       for(let shiftBy = 0; shiftBy < 8; shiftBy += 2)
       {
-          let shifted = NineMensMorrisGameConfiguration._getShiftedStoneConfiguration(shiftBy,configurationToMutate[0],configurationToMutate[1]);
-          if(shifted[0]>bestRotationLeft || (shifted[0] === bestRotationLeft && shifted[1] > bestRotationRight))
+          const shifted = NineMensMorrisGameConfiguration._getShiftedStoneConfiguration(shiftBy,configurationToMutate[0],configurationToMutate[1]);
+
+          if(shifted[0] > bestRotationLeft ||
+            (shifted[0] === bestRotationLeft && shifted[1] > bestRotationRight)
+          )
           {
             bestRotationLeft = shifted[0];
             bestRotationRight= shifted[1];
