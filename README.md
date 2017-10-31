@@ -1,4 +1,5 @@
 # Kampf gegen Mühlen
+[![Build Status](https://travis-ci.org/worenga/nine-mens-morris-challenge.svg?branch=master)](https://travis-ci.org/worenga/nine-mens-morris-challenge)
 ## adesso / it-talents.de Code Competition Oktober 2017
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
