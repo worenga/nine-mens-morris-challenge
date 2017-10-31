@@ -40,7 +40,7 @@ The Temporal Difference Algorithm]{http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.
 
 ## Live Demo
 
-Das bereitgestellte Docker Image wird auf der Google Cloud Engine gehostet http://104.199.16.87:4000/
+Das bereitgestellte Docker Image wird auf der Amazon Cloud gehostet http://18.194.116.182:8099/
 
 
 ## Installation
