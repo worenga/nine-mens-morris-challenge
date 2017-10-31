@@ -44,12 +44,16 @@
 
 <script src="./player-area.js"></script>
 
+
+
 <style lang="scss" scoped>
+
 .fade-enter-active, .fade-leave-active {
-  transition: opacity .2s
+  transition: opacity .2s;
 }
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0
+.fade-enter, .fade-leave-to {
+  transition: opacity .2s;
+  opacity: 0;
 }
 
 .triangle-border .heading{
@@ -62,7 +66,6 @@
   border:5px solid #8c8a82;
   color:#333;
   background:#fff;
-  /* css3 */
   -webkit-border-radius:10px;
   -moz-border-radius:10px;
   border-radius:10px;
@@ -72,12 +75,11 @@
 .triangle-border:before {
   content:"";
   position:absolute;
-  bottom:-20px; /* value = - border-top-width - border-bottom-width */
-  left:40px; /* controls horizontal position */
+  bottom:-20px;
+  left:40px;
   border-width:20px 20px 0;
   border-style:solid;
   border-color:#8c8a82 transparent;
-  /* reduce the damage in FF3.0 */
   display:block;
   width:0;
 }
@@ -85,12 +87,11 @@
 .triangle-border:after {
   content:"";
   position:absolute;
-  bottom:-13px; /* value = - border-top-width - border-bottom-width */
-  left:47px; /* value = (:before left) + (:before border-left) - (:after border-left) */
+  bottom:-13px;
+  left:47px;
   border-width:13px 13px 0;
   border-style:solid;
   border-color:#fff transparent;
-  /* reduce the damage in FF3.0 */
   display:block;
   width:0;
 }

@@ -38,13 +38,27 @@
         <div class="level-item">
           <div class="field is-grouped">
             <div class="control">
-              <button class="button is-medium is-info" @click="undo"> Undo Last Move</button>
+              <button class="button is-medium is-info" @click="undo">
+                <span class="icon is-medium">
+                  <i class="fa fa-step-backward"></i>
+                </span> <span>Undo Last Move</span></button>
             </div>
+
             <div class="control">
-              <button class="button is-medium is-info" @click="resetWinStats"> Reset Player Stats </button>
+              <button class="button is-medium is-outlined" @click="reset">
+                <span class="icon is-medium">
+                  <i class="fa fa-fast-backward"></i>
+                </span>
+                <span>Reset</span> </button>
             </div>
+
             <div class="control">
-              <button class="button is-medium is-info" @click="reset"> Reset </button>
+              <button class="button is-medium is-danger" @click="resetWinStats">
+                <span class="icon is-medium">
+                  <i class="fa fa-trash-o"></i>
+                </span>
+                 <span>Clear Stats</span>
+               </button>
             </div>
           </div>
         </div>
