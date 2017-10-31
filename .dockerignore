@@ -1,2 +1,5 @@
-assets/neural_nets/nn_singleiteration_new*
-assets/neural_nets/nn_singleiteration_notake_reward_new*
+assets/neural_nets/nn_singleiteration_new
+assets/neural_nets/nn_singleiteration_notake_reward_new
+assets/neural_nets/old
+node_modules
+.npm
