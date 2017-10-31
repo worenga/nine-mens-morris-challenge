@@ -33,6 +33,7 @@ Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für j
 * *Deep Temporal Difference (TD) Reinforcement Learning*:
   Wir trainineren ein Neuronales Netz, sodass es den Wert von zuküntigen Spielständen approximiert.
   Wir haben ein Neuronales Netz für 10 Stunden auf 2500 Spielen und 200k Spielzügen traininert.
+  Es koennen unterschiedliche Trainingsstufen ausgewählt werden.
   Vgl. [Reinforcement Learning for Board Games:
 The Temporal Difference Algorithm]{http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.d/TR-TDgame_EN.pdf}
 
