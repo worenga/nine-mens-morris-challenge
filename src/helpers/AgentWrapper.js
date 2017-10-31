@@ -25,6 +25,10 @@ export class AgentWrapper {
       );
 
     }
+    else if ( oEvent.data[0] == "setOptions" )
+    {
+      this.agent.setOptions(oEvent.data[1]);
+    }
     else if ( oEvent.data[0] == "requestReinitialization" )
     {
       this.agent.newGame();
