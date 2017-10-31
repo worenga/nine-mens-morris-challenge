@@ -9,6 +9,7 @@ Eine ES6-Webapplikation auf Basis von [vue.js](), [bulma](https://bulma.io), [fa
 
 ## Kurzbeschreibung / Übersicht
 
+![Screenshot](https://raw.githubusercontent.com/worenga/nine-mens-morris-challenge/master/screencapture.png)
 
 
 ## Systemarchitektur
