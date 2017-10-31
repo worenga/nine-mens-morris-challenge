@@ -26,17 +26,7 @@ module.exports = {
           collapseWhitespace: true,
           removeAttributeQuotes: true
         },
-      }),
-      /*new FaviconsWebpackPlugin({
-        logo:'./assets/favicon.png',
-        title: 'Nine Men\'s Morris',
-        emitStats: false,
-        // Generate a cache file with control hashes and
-        // don't rebuild the favicons until those hashes change
-        persistentCache: true,
-        // Inject the html into the html-webpack-plugin
-        inject: true
-      })*/
+      })
   ],
 
   devServer: {
@@ -132,6 +122,18 @@ if (process.env.NODE_ENV === 'production') {
 
     new webpack.LoaderOptionsPlugin({
       minimize: true
+    }),
+
+    new FaviconsWebpackPlugin({
+      logo:'./assets/favicon.png',
+      title: 'Nine Men\'s Morris',
+      emitStats: false,
+      // Generate a cache file with control hashes and
+      // don't rebuild the favicons until those hashes change
+      persistentCache: true,
+      // Inject the html into the html-webpack-plugin
+      inject: true
     })
+
   ]);
 }
