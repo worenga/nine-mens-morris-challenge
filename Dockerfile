@@ -18,13 +18,14 @@ ENV NODE_ENV=production
 ADD src ./src
 ADD assets ./assets
 
-RUN npm run build 
+RUN npm run build
 
-env PM2_SERVE_PORT $PORT
-EXPOSE $PORT
+env PM2_SERVE_PORT=${PORT}
+
+EXPOSE ${PORT}
 
 #Cleanup
 
-RUN rm -rfv src assets node_modules package.json package-lock.json webpack.config.js .babelrc
+RUN rm -rfv src assets node_modules package.json package-lock.json webpack.config.js .babelrc .npm
 
 CMD pm2 start process.json --no-daemon
