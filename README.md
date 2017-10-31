@@ -1,5 +1,5 @@
 # Kampf gegen Mühlen
-## Adesso / it-talents.de Code Competition
+## adesso / it-talents.de Code Competition
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
 Einreichung für die it-talents.de/Adesso Code-Competition Oktober 2017 [Kampf gegen Mühlen](https://www.it-talents.de/foerderung/code-competition/code-competition-02-2017)
@@ -32,6 +32,7 @@ Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für j
 
 * *Deep Temporal Difference (TD) Reinforcement Learning*:
   Wir trainineren ein Neuronales Netz, sodass es den Wert von zuküntigen Spielständen approximiert.
+  Wir haben ein Neuronales Netz für 10 Stunden auf 2500 Spielen und 200k Spielzügen traininert.
   Vgl. [Reinforcement Learning for Board Games:
 The Temporal Difference Algorithm]{http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.d/TR-TDgame_EN.pdf}
 
@@ -101,6 +102,12 @@ Beim Entwickeln bietet sich es an die Development Version mit Live-Reload und be
 npm start
 ```
 
+# Offline Training des Neuronalen Netzes:
+Das Neuronale Netz der TD-Learning Strategie kann offline via Node.js gestartet werden.
+```
+npm run train -- --outDirectory output_directory
+```
+Das entstandene NeuronaleNetz kann in `src/ai/TemporalDifferenceReinforcementAgent.js` zur Verwendung registriert werden.
 
 # Fragen
 
