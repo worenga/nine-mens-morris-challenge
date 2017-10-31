@@ -3,7 +3,7 @@ const path = require('path');
 const Uglify = require("uglifyjs-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 var webpack = require('webpack')
 
 module.exports = {
@@ -12,6 +12,8 @@ module.exports = {
 
     ai_random: ['babel-polyfill','./src/ai_random.worker.js'],
     ai_alphabeta: ['babel-polyfill','./src/ai_alphabeta.worker.js'],
+    ai_maxq: ['babel-polyfill','./src/ai_maxq.worker.js'],
+    ai_temporal: ['babel-polyfill','./src/ai_temporal.worker.js'],
   },
 
   plugins: [
@@ -24,7 +26,17 @@ module.exports = {
           collapseWhitespace: true,
           removeAttributeQuotes: true
         },
-      })
+      }),
+      /*new FaviconsWebpackPlugin({
+        logo:'./assets/favicon.png',
+        title: 'Nine Men\'s Morris',
+        emitStats: false,
+        // Generate a cache file with control hashes and
+        // don't rebuild the favicons until those hashes change
+        persistentCache: true,
+        // Inject the html into the html-webpack-plugin
+        inject: true
+      })*/
   ],
 
   devServer: {
@@ -56,17 +68,37 @@ module.exports = {
       },
     {
       test: /\.vue$/,
-      loader: 'vue-loader'
+      loader: 'vue-loader',
+      options: {
+        loaders: {
+          scss: 'vue-style-loader!css-loader!sass-loader?' + JSON.stringify({
+                            includePaths: [
+                                path.resolve(__dirname, 'node_modules/compass-mixins/lib'),
+                            ]
+                        }), // <style lang="scss">
+
+        }
+      }
+    },
+    {
+      test: /\.json$/,
+      loader: 'json-loader'
+    },
+    {
+      test: /\.scss$/,
+      loader: 'vue-style-loader!css-loader!sass-loader?' + JSON.stringify({
+                    includePaths: [
+                              path.resolve(__dirname, 'node_modules/compass-mixins/lib'),
+                          ]
+                        })
     }
+
   ]
   },
   resolve: {
     alias: {
       'vue$': 'vue/dist/vue.common.js'
     }
-  },
-  performance: {
-    hints: false
   }
 };
 
