@@ -20,21 +20,21 @@ Agenten
 
 ## AI-Strategien
 
-* MiniMax mit Alpha-Beta Pruning, Transposition Tables/Zobrist Hashing und Iterative Deepening
+* *MiniMax mit Alpha-Beta Pruning, Transposition Tables/Zobrist Hashing und Iterative Deepening*:
   Es wird ein Suchbaum auf Basis der aktuellen Spielposition erstellt. Unter der Annahme dass der Gegenspieler optimal Spielt   berechnet der Algorithmus den besten Spielzug bis zu einer gewissen Spieltiefe.
   Um zu verhindern, dass bisher besuchte Spielstände mehrfach ausgewertet werden, wird a) in Transpositionstabellen gespeichert (Caching) b) Spielstaende unabhängig Ihrer Symmetrieeigenschaften (vgl. [Mühle Lehrbuch]{http://muehlespieler.de/download/muehle_lehrbuch.pdf}) betrachtet (Symmetrische Spielfelder werden uniformiert) und c) es wird Alpha-Beta Pruning benutzt (eine Taktik um geschickt Subbäume im Spielbaum die der ideale Gegenspieler nicht wählen würde auszuschließen).
   Der Spieler kann entweder bestimmen bis zur welcher Tiefe der Computer die Spielzüge vorberechnen kann (was unter Umständen recht lange dauern kann) oder Iterative-Deepening benutzen und ein festes Zeitfenster vorgeben in dem der Computer antworten muss.
 
-* Deep Temporal Difference (TD) Reinforcement Learning:
+* *Deep Temporal Difference (TD) Reinforcement Learning*:
   Wir trainineren ein Neuronales Netz, sodass es den Wert von zuküntigen Spielständen approximiert.
   Vgl. [Reinforcement Learning for Board Games:
 The Temporal Difference Algorithm]{http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.d/TR-TDgame_EN.pdf}
 
-* MaxQ:
+* *MaxQ*:
   Es werden 100 Spielzüge ausgehend von dem Aktuellen Spielzug mit dem bisherigen Wissen exploriert und die einzelnen 
   Spielzüge bewertet. Vgl. [A Painless Q Learning Tutorial](http://mnemstudio.org/path-finding-q-learning-tutorial.htm)
 
-* Random:
+* *Random*:
   Der Computer wählt einen Zufälligen Zug (Benchmarkstrategie)
 
 
