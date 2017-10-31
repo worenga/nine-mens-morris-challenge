@@ -114,8 +114,6 @@ export class MaxQAgent extends Agent
           {
             if(i++ > 500)
             {
-
-              console.log('bailing');
               break;
             }
             //console.log(i,currentNextState);
