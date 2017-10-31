@@ -71,7 +71,7 @@ Man kann anschliessend über einen Browser unter http://localhost:8099/ auf die 
 Mit CTRL-C kann die Application im Container wieder beendet werden.
 
 
-# Lokale Manuelle Installation:
+# Lokale Manuelle Installation
 
 Gelingt die Docker Installation nicht, so kann der Code lokal installiert und gebaut werden werden.
 
@@ -102,7 +102,7 @@ Beim Entwickeln bietet sich es an die Development Version mit Live-Reload und be
 npm start
 ```
 
-# Offline Training des Neuronalen Netzes:
+# Offline Training des Neuronalen Netzes
 Das Neuronale Netz der TD-Learning Strategie kann offline via Node.js gestartet werden.
 ```
 npm run train -- --outDirectory output_directory
@@ -110,5 +110,4 @@ npm run train -- --outDirectory output_directory
 Das entstandene NeuronaleNetz kann in `src/ai/TemporalDifferenceReinforcementAgent.js` zur Verwendung registriert werden.
 
 # Fragen
-
 Bei Fragen zur Abgabe steht der Autor via Mail jederzeit zut Verfügung.
