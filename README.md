@@ -4,7 +4,7 @@ Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
 Einreichung für die it-talents.de/Adesso Code-Competition Oktober 2017 [Kampf gegen Mühlen](https://www.it-talents.de/foerderung/code-competition/code-competition-02-2017)
 
-Eine ES6-Webapplikation auf Basis von vue.js, fabric.js und synaptic für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser
+Eine ES6-Webapplikation auf Basis von [vue.js](), [bulma](https://bulma.io), [fabric.js](http://fabricjs.com/) und [synaptic](https://github.com/cazala/synaptic/) für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI (Random, Minimax mit AlphaBeta Pruning sowie, MaxQ mit Transition Tables und Temporal Difference Reinforcement Learning) mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser.
 
 
 ## Kurzbeschreibung / Uebersicht
@@ -55,21 +55,24 @@ Dazu wird zunaechst node.js 8 benötigt. Eine entsprechende Installationsanleitu
 
 Anschliessend kann der Code von GitHub geladen werden:
 ```
-git clone https://github.com/worenga/tsp-challenge.git
+git clone https://github.com/worenga/nine-mens-morris-challenge.git
 ```
 und entsprechend installiert werden. 
+
 ```
-cd tsp-challenge
-cd backend
-mkdir build
-cd build
-cmake -D CMAKE_BUILD_TYPE=Release ../
-make -j4
-cd ../..
+cd nine-mens-morris-challenge
+npm install
+npm run buildprod
+npm run serve
 ```
 
-Und nun kann die Appliation aus dem `frontend/server` Verzeichnis mithilfe von
+Anschliessend kann man ueber einen Browser die Applikation auf http://localhost:8099 lokal aufrufen
+
+
+# Development Modus
+
+Beim Entwickeln bietet sich es an die Development Version mit Live-Reload und besseren Fehlermeldungen zu starten, dies geht via
+
 ```
 npm start
 ```
-gestartet werden.
