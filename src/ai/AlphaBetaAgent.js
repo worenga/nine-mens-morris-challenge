@@ -70,8 +70,6 @@ export class AlphaBetaAgent extends Agent
 
   _evaluateConfiguration(player, configuration)
   {
-    this.evalCounts += 1;
-
     const opponent = 1 - player;
     if(configuration.hasWon(opponent))
     {
@@ -88,6 +86,7 @@ export class AlphaBetaAgent extends Agent
     else
     {
       const removedStones = configuration.getRemovedStonesForPlayer(opponent);
+
       const ownStones = configuration.getAmountStones(player);
       const opponentStones = configuration.getAmountStones(opponent);
       const closedMills = configuration.getNumberOfClosedMillsForPlayer(player);
