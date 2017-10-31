@@ -4,7 +4,7 @@ Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
 Einreichung für die it-talents.de/Adesso Code-Competition Oktober 2017 [Kampf gegen Mühlen](https://www.it-talents.de/foerderung/code-competition/code-competition-02-2017)
 
-Eine ES6-Webapplikation auf Basis von [vue.js](), [bulma](https://bulma.io), [fabric.js](http://fabricjs.com/) und [synaptic](https://github.com/cazala/synaptic/) für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI (Random, Minimax mit AlphaBeta Pruning sowie, MaxQ mit Transition Tables und Temporal Difference Reinforcement Learning) mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser. Die rechenintensiven AI-Berechnungen finden in einem Web Worker statt.
+Eine ES6-Webapplikation auf Basis von [vue.js](), [bulma](https://bulma.io), [webpack](https://github.com/webpack/webpack) [fabric.js](http://fabricjs.com/) und [synaptic](https://github.com/cazala/synaptic/) für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI (Random, Minimax mit AlphaBeta Pruning sowie, MaxQ mit Transition Tables und Temporal Difference Reinforcement Learning) mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser. Die rechenintensiven AI-Berechnungen finden in einem Web Worker statt.
 
 
 ## Kurzbeschreibung / Übersicht
