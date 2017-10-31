@@ -1,24 +1,29 @@
 # Kampf gegen Mühlen
-## Adesso / it-talents.de Code Competition
+## adesso / it-talents.de Code Competition Oktober 2017
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
 Einreichung für die it-talents.de/Adesso Code-Competition Oktober 2017 [Kampf gegen Mühlen](https://www.it-talents.de/foerderung/code-competition/code-competition-02-2017)
 
-Eine ES6-Webapplikation auf Basis von [vue.js](), [bulma](https://bulma.io), [fabric.js](http://fabricjs.com/) und [synaptic](https://github.com/cazala/synaptic/) für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI (Random, Minimax mit AlphaBeta Pruning sowie, MaxQ mit Transition Tables und Temporal Difference Reinforcement Learning) mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser.
+Eine ES6-Webapplikation auf Basis von [vue.js](), [bulma](https://bulma.io), [webpack](https://github.com/webpack/webpack) [fabric.js](http://fabricjs.com/) und [synaptic](https://github.com/cazala/synaptic/) für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI (Random, Minimax mit AlphaBeta Pruning sowie, MaxQ mit Transition Tables und Temporal Difference Reinforcement Learning) mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser. Die rechenintensiven AI-Berechnungen finden in einem Web Worker statt.
 
 
 ## Kurzbeschreibung / Übersicht
 
+![Screenshot](https://raw.githubusercontent.com/worenga/nine-mens-morris-challenge/master/screencapture.png)
 
 
 ## Systemarchitektur
 
-Game Engine
-Datenstruktur
-Spielbrett
-Agenten
+Das System ist als Vue.js Komponente geschrieben und laesst sich somit ohne Muehe in Andere Web Applikationen integrieren.
+Es gibt eine Game Engine, welche die Logik des Spiels auf Basis der Spielzüge händelt. Alles was mit dem aktuellen Spielfeld zu tun hat befindet sich in der Game Configuration.
+Die Game-Engine kommuniziert via Events mit dem Spielbrett (UI). Das Spielbrett wurde mit fabric.js auf Basis von canvas implementiert. Es erlaubt das verschieben der Mühlesteine via Drag and Drop.
+Das Spiel wird von Agenten gespielt. Im simplesten Fall ist ein Agent einfach ein menschlicher Spieler (Human Agent), somit erlaubt es unsere Applikation Zwei Menschen miteinander Spielen zu lassen (z.B. zur Validierung von Spielzügen oder Prüfung der Unentschieden-Bedingungen). Alternativ kann ein Agent auch eine AI sein. Es ist ebenfalls Möglich zwei AIs gegeneinander Spielen zu lassen.
 
-## AI-Strategien
+Datenstruktur:
+Die Game Engine nutzt zur Representation der Spielfelder Bits in einer JavaScript Number.
+Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für jeden Spieler die Positionen auf dem Spielfeld separat. Dies ermoeglicht performante Operationen anhand von Bitmasken, sowie das Shiften von Bits bei der zur Symmetrieberechnung.
+
+## Implementierte AI-Strategien
 
 * *MiniMax mit Alpha-Beta Pruning, Transposition Tables/Zobrist Hashing und Iterative Deepening*:
   Es wird ein Suchbaum auf Basis der aktuellen Spielposition erstellt. Unter der Annahme dass der Gegenspieler optimal Spielt   berechnet der Algorithmus den besten Spielzug bis zu einer gewissen Spieltiefe.
@@ -27,6 +32,8 @@ Agenten
 
 * *Deep Temporal Difference (TD) Reinforcement Learning*:
   Wir trainineren ein Neuronales Netz, sodass es den Wert von zuküntigen Spielständen approximiert.
+  Wir haben ein Neuronales Netz für 10 Stunden auf 2500 Spielen und 200k Spielzügen traininert.
+  Es koennen unterschiedliche Trainingsstufen ausgewählt werden.
   Vgl. [Reinforcement Learning for Board Games:
 The Temporal Difference Algorithm]{http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.d/TR-TDgame_EN.pdf}
 
@@ -65,7 +72,7 @@ Man kann anschliessend über einen Browser unter http://localhost:8099/ auf die 
 Mit CTRL-C kann die Application im Container wieder beendet werden.
 
 
-# Lokale Manuelle Installation:
+# Lokale Manuelle Installation
 
 Gelingt die Docker Installation nicht, so kann der Code lokal installiert und gebaut werden werden.
 
@@ -96,7 +103,12 @@ Beim Entwickeln bietet sich es an die Development Version mit Live-Reload und be
 npm start
 ```
 
+# Offline Training des Neuronalen Netzes
+Das Neuronale Netz der TD-Learning Strategie kann offline via Node.js gestartet werden.
+```
+npm run train -- --outDirectory output_directory
+```
+Das entstandene NeuronaleNetz kann in `src/ai/TemporalDifferenceReinforcementAgent.js` zur Verwendung registriert werden.
 
 # Fragen
-
 Bei Fragen zur Abgabe steht der Autor via Mail jederzeit zut Verfügung.
