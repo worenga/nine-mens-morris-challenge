@@ -1,4 +1,5 @@
-# Kampf gegen Mühlen - Adesso / it-talents.de Code Competition
+# Kampf gegen Mühlen
+## Adesso / it-talents.de Code Competition
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
 Einreichung für die it-talents.de/Adesso Code-Competition Oktober 2017 [Kampf gegen Mühlen](https://www.it-talents.de/foerderung/code-competition/code-competition-02-2017)
