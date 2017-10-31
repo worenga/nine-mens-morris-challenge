@@ -1,20 +1,31 @@
 import {NineMensMorrisGameConfiguration} from '../game/NineMensMorrisGameConfiguration.js';
 
 export class AgentWrapper {
-  constructor(agent) {
+
+  constructor(agent)
+  {
     this.agent = agent;
   }
 
   onMessage(oEvent) {
-    if(oEvent.data[0] == "requestAgentMove")
+    if( oEvent.data[0] == "requestAgentMove" )
     {
-      const configuration = Object.assign(new NineMensMorrisGameConfiguration(),oEvent.data[1]);
+      const configuration = Object.assign(
+        new NineMensMorrisGameConfiguration(),
+        oEvent.data[1]
+      );
+
       const player = oEvent.data[2];
-      this.agent.getNextMove(configuration,player, function(computedMove) {
+
+      this.agent.getNextMove(
+        configuration,player,
+        (computedMove) => {
           postMessage(computedMove);
-      });
+        }
+      );
+
     }
-    else if (oEvent.data[0] == "requestReinitialization")
+    else if ( oEvent.data[0] == "requestReinitialization" )
     {
       this.agent.newGame();
     }
