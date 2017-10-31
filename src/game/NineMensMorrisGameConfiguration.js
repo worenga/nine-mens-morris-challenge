@@ -1,6 +1,33 @@
 import {negMod, bitCount, getSetBitIndices} from '../helpers/Util.js';
 import {NineMensMorrisMove} from './NineMensMorrisMove.js';
 
+/*
+
+  Data structure for our mill game:
+
+  We represent the board state with where the nth bit (from the right) is
+  encoded according the following schematic:
+
+
+  0--------------1-------------2    <--  (outer) ring 0
+  |              |             |
+  |      8-------9------10     |   <--  (inner) ring 1
+  |      |       |       |     |
+  |      |  16--17--18   |     |  <--  (innermost) ring 2
+  |      |   |       |   |     |
+  |      |   |       |   |     |
+  7-----15--23      19--11-----3
+  |      |   |       |   |     |
+  |      |   |       |   |     |
+  |      |  22--21--20   |     |
+  |      |       |       |     |
+  |     14------13------12     |
+  |              |             |
+  6--------------5-------------4
+
+*/
+
+
 const millBitmasks = [
   ( 1 <<  0) | ( 1 <<  1) | ( 1 <<  2),
   ( 1 <<  8) | ( 1 <<  9) | ( 1 << 10),
@@ -38,10 +65,10 @@ const freedomMasks = [
     (1 << 11) | (1 << 13)                              ,//12
     (1 << 12) | (1 << 14) | (1 << 21) | (1 <<  5)      ,//13
     (1 << 13) | (1 << 15)                              ,//14
-    (1 << 8) | (1 << 14) | (1 << 23) | (1 <<  7)       ,//15
+    (1 <<  8) | (1 << 14) | (1 << 23) | (1 <<  7)      ,//15
 
     (1 <<  23) | (1 << 17)                             ,//16
-    (1 <<  16) | (1 << 18) | (1 << 9)                  ,//17
+    (1 <<  16) | (1 << 18) | (1 <<  9)                 ,//17
     (1 <<  17) | (1 << 19)                             ,//18
     (1 <<  18) | (1 << 20) | (1 << 11)                 ,//19
     (1 <<  19) | (1 << 21)                             ,//20
@@ -50,37 +77,13 @@ const freedomMasks = [
     (1 <<  22) | (1 << 16) | (1 << 15)                 ,//23
 ];
 
-/*
-
-  Data structure for our mill game:
-
-  We represent the board state with where the nth bit (from the right) is
-  encoded according the following schematic:
-
-
-  0--------------1-------------2    <--  (outer) ring 0
-  |              |             |
-  |      8-------9------10     |   <--  (inner) ring 1
-  |      |       |       |     |
-  |      |  16--17--18   |     |  <--  (innermost) ring 2
-  |      |   |       |   |     |
-  |      |   |       |   |     |
-  7-----15--23      19--11-----3
-  |      |   |       |   |     |
-  |      |   |       |   |     |
-  |      |  22--21--20   |     |
-  |      |       |       |     |
-  |     14------13------12     |
-  |              |             |
-  6--------------5-------------4
-
-*/
-
 export class NineMensMorrisGameConfiguration
 {
+
   static get PHASE1() { return 1; }
   static get PHASE2() { return 2; }
   static get PHASE3() { return 3; }
+
 
   constructor(stones,removedStones)
   {
@@ -103,6 +106,7 @@ export class NineMensMorrisGameConfiguration
 		return foundMills;
 	}
 
+
   undoMove(move)
   {
     if(move.from !== null)
@@ -120,6 +124,7 @@ export class NineMensMorrisGameConfiguration
     }
 
   }
+
 
   getDegreeOfFreedomForPlayer(player)
   {
@@ -157,6 +162,7 @@ export class NineMensMorrisGameConfiguration
 		return false;
 	}
 
+
   persistMove(move)
   {
     if(move.from !== null)
@@ -173,6 +179,7 @@ export class NineMensMorrisGameConfiguration
     }
   }
 
+
   static getMillHash(millIndices)
   {
     let hash = 0;
@@ -182,6 +189,7 @@ export class NineMensMorrisGameConfiguration
     }
     return hash;
   }
+
 
   static newMillClosed(beforeMoveHash,afterMoveHash)
   {
@@ -210,33 +218,39 @@ export class NineMensMorrisGameConfiguration
     return NineMensMorrisGameConfiguration.newMillClosed(beforeMove,afterTmpMove);
   }
 
+
   getFreePositionVector()
   {
     return ~(this.stones[0] | this.stones[1]);
   }
 
-  spotIsFree(position)
+
+  spotIsFree( position )
   {
     return (((this.getFreePositionVector() >> position) & 1) === 1 );
   }
 
-  getPositionsForPlayer(player)
+
+  getPositionsForPlayer( player )
   {
     return getSetBitIndices(this.stones[player],24);
   }
 
-  removeStone(player,position)
+
+  removeStone( player, position )
   {
       this.stones[player] &= ~(1 << position);
       this.removedStones[player] += 1;
   }
 
-  getNumberOfClosedMillsForPlayer(player)
+
+  getNumberOfClosedMillsForPlayer( player )
 	{
 		return this.getClosedMillsIndicesForPlayer(player).length;
 	}
 
-  static _getInnerOuterSwappedConfiguration(left,right)
+
+  static _getInnerOuterSwappedConfiguration( left, right )
   {
     //Swap rings 1 and 3:
     const newLeft = (((left >> 0) & 255) << 16) | (left & (255 << 8)) | ((left >> 16) & 255);
@@ -244,8 +258,10 @@ export class NineMensMorrisGameConfiguration
     return [newLeft,newRight];
   }
 
-  static _getHorizontalMirroredConfiguration(left,right)
+
+  static _getHorizontalMirroredConfiguration( left, right )
   {
+
     const horizontalMask = ~(
       (1 << 0) | (1 << 1) | (1 << 2) | (1 << 8) | (1 << 9) | (1 << 10) |
       (1 << 8) | (1 << 9) | (1 << 10) | (1 << 12) | (1 << 13) | (1 << 14) |
@@ -267,24 +283,23 @@ export class NineMensMorrisGameConfiguration
 
 
     newLeft |= (left & (1 <<  8)) << 6; // set value of 8 to 14
-    newLeft |= (left & (1 <<  14)) >> 6; // ... and vice versa
+    newLeft |= (left & (1 << 14)) >> 6; // ... and vice versa
 
     newLeft |= (left & (1 <<  9)) << 4; // set value of 9 to 13
-    newLeft |= (left & (1 <<  13)) >> 4; // ... and vice versa
+    newLeft |= (left & (1 << 13)) >> 4; // ... and vice versa
 
-    newLeft |= (left & (1 <<  10)) << 2; // set value of 10 to 12
-    newLeft |= (left & (1 <<  12)) >> 2; // ... and vice versa
+    newLeft |= (left & (1 << 10)) << 2; // set value of 10 to 12
+    newLeft |= (left & (1 << 12)) >> 2; // ... and vice versa
 
 
-    newLeft |= (left & (1 <<  16)) << 6; // set value of 8 to 14
-    newLeft |= (left & (1 <<  22)) >> 6; // ... and vice versa
+    newLeft |= (left & (1 << 16)) << 6; // set value of 8 to 14
+    newLeft |= (left & (1 << 22)) >> 6; // ... and vice versa
 
-    newLeft |= (left & (1 <<  17)) << 4; // set value of 9 to 13
-    newLeft |= (left & (1 <<  21)) >> 4; // ... and vice versa
+    newLeft |= (left & (1 << 17)) << 4; // set value of 9 to 13
+    newLeft |= (left & (1 << 21)) >> 4; // ... and vice versa
 
-    newLeft |= (left & (1 <<  18)) << 2; // set value of 10 to 12
-    newLeft |= (left & (1 <<  20)) >> 2; // ... and vice versa
-
+    newLeft |= (left & (1 << 18)) << 2; // set value of 10 to 12
+    newLeft |= (left & (1 << 20)) >> 2; // ... and vice versa
 
 
 
@@ -299,33 +314,34 @@ export class NineMensMorrisGameConfiguration
 
 
     newRight |= (right & (1 <<  8)) << 6; // set value of 8 to 14
-    newRight |= (right & (1 <<  14)) >> 6; // ... and vice versa
+    newRight |= (right & (1 << 14)) >> 6; // ... and vice versa
 
     newRight |= (right & (1 <<  9)) << 4; // set value of 9 to 13
-    newRight |= (right & (1 <<  13)) >> 4; // ... and vice versa
+    newRight |= (right & (1 << 13)) >> 4; // ... and vice versa
 
-    newRight |= (right & (1 <<  10)) << 2; // set value of 10 to 12
-    newRight |= (right & (1 <<  12)) >> 2; // ... and vice versa
+    newRight |= (right & (1 << 10)) << 2; // set value of 10 to 12
+    newRight |= (right & (1 << 12)) >> 2; // ... and vice versa
 
 
-    newRight |= (right & (1 <<  16)) << 6; // set value of 8 to 14
-    newRight |= (right & (1 <<  22)) >> 6; // ... and vice versa
+    newRight |= (right & (1 << 16)) << 6; // set value of 8 to 14
+    newRight |= (right & (1 << 22)) >> 6; // ... and vice versa
 
-    newRight |= (right & (1 <<  17)) << 4; // set value of 9 to 13
-    newRight |= (right & (1 <<  21)) >> 4; // ... and vice versa
+    newRight |= (right & (1 << 17)) << 4; // set value of 9 to 13
+    newRight |= (right & (1 << 21)) >> 4; // ... and vice versa
 
-    newRight |= (right & (1 <<  18)) << 2; // set value of 10 to 12
-    newRight |= (right & (1 <<  20)) >> 2; // ... and vice versa
+    newRight |= (right & (1 << 18)) << 2; // set value of 10 to 12
+    newRight |= (right & (1 << 20)) >> 2; // ... and vice versa
 
     return [newLeft,newRight];
   }
 
-  static _getVerticalMirroredConfiguration(left,right)
+
+  static _getVerticalMirroredConfiguration( left, right )
   {
 
     const verticalMask = ~(
-      (1 << 0) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 6) | (1 << 7) |
-      (1 << 8) | (1 << 10) | (1 << 11) | (1 << 12) | (1 << 14) | (1 << 15) |
+      (1 <<  0) | (1 <<  2) | (1 <<  3) | (1 <<  4) | (1 <<  6) | (1 <<  7) |
+      (1 <<  8) | (1 << 10) | (1 << 11) | (1 << 12) | (1 << 14) | (1 << 15) |
       (1 << 16) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 22) | (1 << 23)
     );
 
@@ -398,22 +414,22 @@ export class NineMensMorrisGameConfiguration
   }
 
 
-  static _getShiftedStoneConfiguration(shiftByBit, left, right)
+  static _getShiftedStoneConfiguration( shiftByBit, left, right )
   {
+    //We have 3 rings, shift them accordingly.
+
     if(shiftByBit === 0)
     {
       return [left,right];
     }
-    //We have 3 rings, shift them accordingly.
-    //let left = this.stones[0], right=this.stones[1];
 
-    const LeftUpper = (left >> 0) & 255;
-    const LeftMiddle = (left >> 8) & 255;
-    const LeftLower = (left >> 16) & 255;
+    const LeftUpper  = (left >>  0) & 255;
+    const LeftMiddle = (left >>  8) & 255;
+    const LeftLower  = (left >> 16) & 255;
 
-    const RightUpper = (right >> 0) & 255;
-    const RightMiddle = (right >> 8) & 255;
-    const RightLower = (right >> 16) & 255;
+    const RightUpper  = (right >>  0) & 255;
+    const RightMiddle = (right >>  8) & 255;
+    const RightLower  = (right >> 16) & 255;
 
 
     const circShiftLeftUpper = ((LeftUpper << shiftByBit) | (LeftUpper >> (8 - shiftByBit))) &255;
@@ -433,19 +449,16 @@ export class NineMensMorrisGameConfiguration
 
 
 
-
-
-  //Compute equivalent rotations and mirrorings
-  getUnifiedShiftHash(zobristTable)
+  getUnifiedConfiguration()
   {
-
     //So much symmetry...
-
     let bestRotationLeft = this.stones[0];
     let bestRotationRight = this.stones[1];
 
-    let verticalMirroredConfiguration = NineMensMorrisGameConfiguration._getVerticalMirroredConfiguration(this.stones[0],this.stones[1]);
-    let horizontalMirroredConfiguration = NineMensMorrisGameConfiguration._getHorizontalMirroredConfiguration(this.stones[0],this.stones[1]);
+    let verticalMirroredConfiguration = NineMensMorrisGameConfiguration.
+              _getVerticalMirroredConfiguration(this.stones[0],this.stones[1]);
+    let horizontalMirroredConfiguration = NineMensMorrisGameConfiguration.
+              _getHorizontalMirroredConfiguration(this.stones[0],this.stones[1]);
 
     for(let configurationToMutate of [
                                   [this.stones[0],this.stones[1]],
@@ -459,10 +472,15 @@ export class NineMensMorrisGameConfiguration
 
       for(let shiftBy = 0; shiftBy < 8; shiftBy += 2)
       {
-          const shifted = NineMensMorrisGameConfiguration._getShiftedStoneConfiguration(shiftBy,configurationToMutate[0],configurationToMutate[1]);
+          const shifted = NineMensMorrisGameConfiguration.
+            _getShiftedStoneConfiguration(shiftBy,
+              configurationToMutate[0],
+              configurationToMutate[1]
+            );
 
-          if(shifted[0] > bestRotationLeft ||
-            (shifted[0] === bestRotationLeft && shifted[1] > bestRotationRight)
+          if( shifted[0] > bestRotationLeft ||
+              (shifted[0] === bestRotationLeft &&
+               shifted[1] > bestRotationRight)
           )
           {
             bestRotationLeft = shifted[0];
@@ -471,10 +489,27 @@ export class NineMensMorrisGameConfiguration
       }
 
     }
+    return [bestRotationLeft,bestRotationRight];
+  }
 
-    return this._getHash(zobristTable, bestRotationLeft, bestRotationRight, this.removedStones[0],this.removedStones[1]);
+
+  constructUnifiedConfiguration()
+  {
+    const unifiedConfiguration = this.getUnifiedConfiguration();
+    let config = new NineMensMorrisGameConfiguration(unifiedConfiguration, this.removedStones);
+    return config;
+  }
+
+
+  //Compute equivalent rotations and mirrorings
+  getUnifiedShiftHash(zobristTable)
+  {
+    const unifiedConfiguration = this.getUnifiedConfiguration();
+
+    return this._getHash(zobristTable, unifiedConfiguration[0], unifiedConfiguration[1], this.removedStones[0],this.removedStones[1]);
 
   }
+
 
   _getHash(zobristTable, left, right, removedLeft, removedRight)
   {
@@ -499,6 +534,7 @@ export class NineMensMorrisGameConfiguration
     return hash;
   }
 
+
   getConfigurationHash(zobristTable)
   {
     return this._getHash(zobristTable,
@@ -516,10 +552,12 @@ export class NineMensMorrisGameConfiguration
     return bitCount(this.stones[player]);
   }
 
+
   getNumberOfRemovedStones(player)
   {
     return this.removedStones[player];
   }
+
 
   canBeMoved(freePositions,level,ringPos,player)
   {
@@ -562,6 +600,7 @@ export class NineMensMorrisGameConfiguration
         }
       }
     }
+
     return false;
   }
 
@@ -570,11 +609,12 @@ export class NineMensMorrisGameConfiguration
 	{
 		const amountStones = this.getAmountStones(player);
 		const removedStones = this.getNumberOfRemovedStones(player);
-		if (amountStones+removedStones < 9)
+
+		if ( amountStones + removedStones < 9 )
 		{
 			return NineMensMorrisGameConfiguration.PHASE1;
 		}
-		else if(amountStones > 3 && removedStones < 6)
+		else if( amountStones > 3 && removedStones < 6 )
 		{
 			return NineMensMorrisGameConfiguration.PHASE2;
 		}
@@ -588,20 +628,20 @@ export class NineMensMorrisGameConfiguration
 
   isDraw()
   {
-    return (this.playerCanMove(0) === false &&
-            this.playerCanMove(1) === false );
+    return ( this.playerCanMove(0) === false &&
+             this.playerCanMove(1) === false );
   }
 
 
-  hasWon(player)
+  hasWon( player )
   {
     const opponent = 1 - player;
-    return (this.getRemovedStonesForPlayer(opponent) > 6 ||
-            this.playerCanMove(opponent) === false );
+    return ( this.getRemovedStonesForPlayer(opponent) > 6 ||
+             this.playerCanMove(opponent) === false );
   }
 
 
-  playerAllowedToMove(player,from,to)
+  playerAllowedToMove( player, from, to )
 	{
 		const opponent = 1 - player;
 
@@ -653,12 +693,12 @@ export class NineMensMorrisGameConfiguration
 				const fromRingUpperLevelPos = (fromRing+1)*8+((fromRingPos));
 				const fromRingLowerLevelPos = (fromRing-1)*8+((fromRingPos));
 
-				if(fromRingUpperLevelPos < 24 && fromRingUpperLevelPos === to)
+				if( fromRingUpperLevelPos < 24 && fromRingUpperLevelPos === to )
 				{
 						return true;
 				}
 
-				if(fromRingLowerLevelPos >= 0 && fromRingLowerLevelPos === to) //Note
+				if( fromRingLowerLevelPos >= 0 && fromRingLowerLevelPos === to ) //Note
 				{
 						return true;
 				}
@@ -671,16 +711,17 @@ export class NineMensMorrisGameConfiguration
 		return true;
 	}
 
-  playerCanMove(player)
+
+  playerCanMove( player )
   {
     const phase = this.getPhaseForPlayer(player);
 
     //If we are in Phase 1, it is clear that every player can move.
-    if( phase === NineMensMorrisGameConfiguration.PHASE1)
+    if( phase === NineMensMorrisGameConfiguration.PHASE1 )
     {
       return true;
     }
-    else if(phase === NineMensMorrisGameConfiguration.PHASE2)
+    else if( phase === NineMensMorrisGameConfiguration.PHASE2 )
     {
       //We are in Phase 2 or 3, i.e. check to find any position that the player
       //is able to move without violating the constraints of the game
@@ -697,7 +738,7 @@ export class NineMensMorrisGameConfiguration
         }
       }
     }
-    else if(phase === NineMensMorrisGameConfiguration.PHASE3)
+    else if( phase === NineMensMorrisGameConfiguration.PHASE3 )
     {
       //Player can always move in Phase 3 there are not sufficient stones
       //to occupy all free positions:
@@ -706,6 +747,7 @@ export class NineMensMorrisGameConfiguration
 
     return false;
   }
+
 
   encodePosToHumanReadable(pos)
   {
@@ -733,14 +775,16 @@ export class NineMensMorrisGameConfiguration
   }
 
 
-  getRemovablePiecesForPlayer(player)
+  getRemovablePiecesForPlayer( player )
   {
     const opponent = 1 - player;
     let removablePositions = [];
-    for(let position = 0; position < 24; position++)
+
+    for( let position = 0; position < 24; position++ )
     {
-      if((this.stones[opponent] >> position & 1) === 1 &&
-         (this.isPartOfMill(position,opponent) === false))
+
+      if( (this.stones[opponent] >> position & 1) === 1 &&
+          (this.isPartOfMill( position, opponent ) === false) )
       {
         removablePositions.push(position);
       }
@@ -748,11 +792,11 @@ export class NineMensMorrisGameConfiguration
 
 
     //Special Case, if all stones are protected or final move.
-    if(bitCount(this.stones[opponent]) > 2 && removablePositions.length === 0)
+    if( bitCount(this.stones[opponent]) > 2 && removablePositions.length === 0 )
     {
       for(let i = 0; i< 24; i++)
       {
-        if(((this.stones[opponent] >> i) &1) === 1)
+        if( ( (this.stones[opponent] >> i) & 1 ) === 1 )
         {
           removablePositions.push(i);
         }
@@ -760,48 +804,53 @@ export class NineMensMorrisGameConfiguration
     }
 
     return removablePositions;
+
   }
 
 
-  getRemovedStonesForPlayer(player)
+  getRemovedStonesForPlayer( player )
 	{
 		return this.removedStones[player];
 	}
 
-  constructFollowUpConfiguration(player,move)
+
+  constructFollowUpConfiguration( player, move )
   {
     let config = new NineMensMorrisGameConfiguration(this.stones, this.removedStones);
     config.persistMove(move);
     return config;
   }
 
+
   getStringRepr()
   {
     return `${this.stones[0]}-${this.stones[1]}`;
   }
 
-  * generateSuccessorConfiguration(player)
+
+
+  * generateSuccessorConfiguration( player )
   {
     //If we are in P1, we can essentially move anywhere where it is free:
-    const phase = this.getPhaseForPlayer(player);
-    if(phase == NineMensMorrisGameConfiguration.PHASE1)
+    const phase = this.getPhaseForPlayer( player );
+    if( phase == NineMensMorrisGameConfiguration.PHASE1 )
     {
       const from = null;
-      let targets = getSetBitIndices(this.getFreePositionVector(),24);
+      let targets = getSetBitIndices( this.getFreePositionVector(), 24 );
 
-      for(let to of targets)
+      for( let to of targets )
       {
-        let tmpMove = new NineMensMorrisMove(player,to,from);
+        let tmpMove = new NineMensMorrisMove( player, to, from );
 
-        if(this.moveRequiresRemoval(player,from,to))
+        if( this.moveRequiresRemoval( player, from, to ) )
         {
-          let removables = this.getRemovablePiecesForPlayer(player);
-          for(let removable of removables)
+          let removables = this.getRemovablePiecesForPlayer( player );
+          for( let removable of removables )
           {
             tmpMove.removedPiece = removable;
             yield {
               move: tmpMove,
-              configuration: this.constructFollowUpConfiguration(player,tmpMove)
+              configuration: this.constructFollowUpConfiguration( player, tmpMove )
             };
           }
 
@@ -810,38 +859,39 @@ export class NineMensMorrisGameConfiguration
         {
           yield {
             move: tmpMove,
-            configuration: this.constructFollowUpConfiguration(player,tmpMove)
+            configuration: this.constructFollowUpConfiguration( player, tmpMove )
           };
         }
       }
 
     }
-    else if(phase >= NineMensMorrisGameConfiguration.PHASE2)
+    else if( phase >= NineMensMorrisGameConfiguration.PHASE2 )
     {
-      const origins = getSetBitIndices(this.stones[player],24);
-      const targets = getSetBitIndices(this.getFreePositionVector(),24);
-      const removables = this.getRemovablePiecesForPlayer(player);
+      const origins = getSetBitIndices( this.stones[player], 24 );
+      const targets = getSetBitIndices( this.getFreePositionVector(), 24 );
+      const removables = this.getRemovablePiecesForPlayer( player );
 
-      for(let from of origins)
+      for( let from of origins )
       {
-        for(let to of targets)
+        for( let to of targets )
         {
-          if( !this.playerAllowedToMove(player,from,to) )
+
+          if( !this.playerAllowedToMove( player, from, to ) )
           {
             continue;
           }
 
-          let tmpMove = new NineMensMorrisMove(player,to,from);
+          let tmpMove = new NineMensMorrisMove( player, to, from );
 
-          if(this.moveRequiresRemoval(player,from,to))
+          if( this.moveRequiresRemoval(player, from, to ) )
           {
 
-            for(let removable of removables)
+            for( let removable of removables )
             {
               tmpMove.removedPiece = removable;
               yield {
                 move: tmpMove,
-                configuration: this.constructFollowUpConfiguration(player,tmpMove)
+                configuration: this.constructFollowUpConfiguration( player, tmpMove )
               };
             }
 
@@ -850,13 +900,11 @@ export class NineMensMorrisGameConfiguration
           {
             yield {
               move: tmpMove,
-              configuration: this.constructFollowUpConfiguration(player,tmpMove)
+              configuration: this.constructFollowUpConfiguration( player, tmpMove )
             };
           }
-
         }
       }
     }
-
   }
 }

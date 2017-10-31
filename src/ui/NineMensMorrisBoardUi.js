@@ -59,6 +59,24 @@ export class NineMensMorrisBoardUi extends EventEmitter {
       opacity: 0,
     });
 
+    this.textOverlayMill = new fabric.Text('Mill!', {
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      left: 0, //Take the block's position
+      top: 0,
+      fill: 'white',
+      stroke: 'black',
+      textAlign: 'center',
+      fontFamily: 'Sans',
+      fontWeight: 'bold',
+      fontSize: '35',
+      hasControls: false,
+      hasBorders: false,
+      strokeWidth: 1,
+      opacity: 0,
+    });
+
     this.textOverlayBlackWon = new fabric.Text('BLACK\nwins!', {
       originX: 'center',
       originY: 'center',
@@ -104,6 +122,9 @@ export class NineMensMorrisBoardUi extends EventEmitter {
 
     this.canvas.add(this.textOverlayDraw);
     this.canvas.centerObject(this.textOverlayDraw);
+
+    this.canvas.add(this.textOverlayMill);
+    this.canvas.centerObject(this.textOverlayMill);
   }
 
   _setupGrid() {
@@ -675,12 +696,17 @@ export class NineMensMorrisBoardUi extends EventEmitter {
     return 7;
   }
 
+  static get OVERLAY_MILL() {
+    return 8;
+  }
+
 
   hideOverlays()
   {
     this.textOverlayDraw.setOpacity(0);
     this.textOverlayBlackWon.setOpacity(0);
     this.textOverlayWhiteWon.setOpacity(0);
+    this.textOverlayMill.setOpacity(0);
   }
 
   setOverlay(overlay,typeOfDraw=null)
@@ -698,6 +724,10 @@ export class NineMensMorrisBoardUi extends EventEmitter {
     else if (overlay === NineMensMorrisBoardUi.OVERLAY_DRAW)
     {
       overlayObject = this.textOverlayDraw;
+    }
+    else if(overlay === NineMensMorrisBoardUi.OVERLAY_MILL)
+    {
+      overlayObject = this.textOverlayMill;
     }
 
     if(overlayObject !== null)
@@ -746,6 +776,13 @@ export class NineMensMorrisBoardUi extends EventEmitter {
         group.bringToFront();
       });
 
+    }
+    else{
+      this.removalIndicators.forEach((group) => {
+        group.setOpacity(0.0);
+        group.selectable = false;
+      });
+      this.canvas.remove(...this.removalIndicators);
     }
 
     this.currentTurn = turn;

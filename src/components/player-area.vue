@@ -1,0 +1,99 @@
+<template>
+  <div>
+
+    <transition name="fade">
+    <div class="triangle-border" v-if="isActive">
+      <p class="heading has-text-centered n">Current Turn</p>
+    </div>
+    </transition>
+
+    <div class="box is-warning is-focused">
+
+      <p class="title has-text-centered">{{playerName}}
+        <pulse-loader :loading="isThinking" color="red"></pulse-loader>
+      </p>
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label class="label" :for="'id-'+playerName">AI:</label>
+        </div>
+        <div class="field-body">
+          <div class="control">
+            <div class="select">
+              <select :id="'id-'+playerName" @change="onAgentChange($event.target.value)">
+                <option disabled value="">Please select one</option>
+                <option v-for="option in availableAgents" :selected="option.id == selectedAgent" v-bind:value="option.id">
+                  {{ option.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="level-item has-text-centered">
+        <div>
+          <p class="heading">Wins:</p>
+          <p class="title">{{numberOfWins}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+
+<script src="./player-area.js"></script>
+
+<style lang="scss" scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .2s
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0
+}
+
+.triangle-border .heading{
+  margin-bottom:0;
+}
+.triangle-border {
+  position:relative;
+  padding:5px;
+  margin:1em 0 em;
+  border:5px solid #8c8a82;
+  color:#333;
+  background:#fff;
+  /* css3 */
+  -webkit-border-radius:10px;
+  -moz-border-radius:10px;
+  border-radius:10px;
+}
+
+
+.triangle-border:before {
+  content:"";
+  position:absolute;
+  bottom:-20px; /* value = - border-top-width - border-bottom-width */
+  left:40px; /* controls horizontal position */
+  border-width:20px 20px 0;
+  border-style:solid;
+  border-color:#8c8a82 transparent;
+  /* reduce the damage in FF3.0 */
+  display:block;
+  width:0;
+}
+
+.triangle-border:after {
+  content:"";
+  position:absolute;
+  bottom:-13px; /* value = - border-top-width - border-bottom-width */
+  left:47px; /* value = (:before left) + (:before border-left) - (:after border-left) */
+  border-width:13px 13px 0;
+  border-style:solid;
+  border-color:#fff transparent;
+  /* reduce the damage in FF3.0 */
+  display:block;
+  width:0;
+}
+
+
+</style>
