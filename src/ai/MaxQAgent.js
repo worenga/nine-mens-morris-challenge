@@ -103,6 +103,7 @@ export class MaxQAgent extends Agent
       {
         let currentNextState = startState;
         let currentPlayer = player;
+        
         //Do While the goal state hasn't been reached...
         let gameHasEnded = false;
         let currentConfigurationHash = configuration.getUnifiedShiftHash(this.ZOBRIST);

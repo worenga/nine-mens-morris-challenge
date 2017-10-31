@@ -22,7 +22,7 @@ const optionDefinitions = [
 
 const options = commandLineArgs(optionDefinitions);
 
-const outdir = path.resolve(options.outDirectory)
+const outdir = path.resolve(options.outDirectory);
 mkdirSync(outdir);
 
 let agent = new  TemporalDifferenceReinforcementAgent();

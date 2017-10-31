@@ -32,12 +32,12 @@ import synaptic from 'synaptic';
 import {Neuron, Layer, Network, Trainer, Architect} from 'synaptic';
 
 
-
 export class TemporalDifferenceReinforcementAgent extends Agent
 {
 
   _initNN()
   {
+    //Defines the architecture of our neural net (to train!).
     var inputLayer = new Layer(26);
     var hiddenLayer = new Layer(26*3);
 		var hiddenLayer2 = new Layer(24);
@@ -46,7 +46,6 @@ export class TemporalDifferenceReinforcementAgent extends Agent
     inputLayer.project(hiddenLayer);
 		hiddenLayer.project(hiddenLayer2);
 		hiddenLayer2.project(outputLayer);
-
 
 		inputLayer.set({
 			squash: Neuron.squash.ReLU,
@@ -77,17 +76,18 @@ export class TemporalDifferenceReinforcementAgent extends Agent
   }
 
 
-
   constructor()
   {
     super();
 
+    //Discount Factor:
 		this.GAMMA = 0.99;
 
+    //Reward for Win
     this.SCORE_WIN = 1.0;
-
+    //Reward for Draw.
     this.SCORE_DRAW = 0.5;
-
+    //Reward if piece was taken from enemy
 		this.SCORE_PIECE_TAKEN = 0.2;
 
 		this.loaded = false;
@@ -95,6 +95,7 @@ export class TemporalDifferenceReinforcementAgent extends Agent
     this._initNN();
 
   }
+
 
   setOptions(options)
   {
@@ -107,8 +108,8 @@ export class TemporalDifferenceReinforcementAgent extends Agent
       }
   }
 
-
-  _evaluateConfiguration(player,move,configuration)
+  //Objective function that qantifies an encountered game configuration
+  _evaluateConfiguration( player, move, configuration )
   {
 
     const opponent = 1 - player;
@@ -140,11 +141,11 @@ export class TemporalDifferenceReinforcementAgent extends Agent
 			}
 
     }
-    return {score:score, isFinal:isFinal};
+    return { score:score, isFinal:isFinal };
   }
 
 
-  _toFeatureVector(configuration,player)
+  _toFeatureVector( configuration, player )
   {
     const opponent = 1 - player;
     const playerPositions = configuration.getPositionsForPlayer(player);
@@ -178,21 +179,22 @@ export class TemporalDifferenceReinforcementAgent extends Agent
 	}
 
 
-	normalizeInput(input)
+	normalizeInput( input )
 	{
 		return (input + 1) / 2;
 	}
 
 
-  _evalNN(configuration,player)
+  _evalNN( configuration, player )
   {
     const unifiedConfiguration = configuration.constructUnifiedConfiguration();
 		return this.normalizeOutput(this.network.activate(this._toFeatureVector(unifiedConfiguration,player)));
   }
 
 
-
-	* train(configuration,player, num_episodes=100)
+//Invoke this via:
+//$ npm run train -- --outDirectory output_directory
+	* train(configuration,player, yield_ever_n_episodes=100)
 	{
 		const INITIAL_EPSILON = 1.0;
 		const FINAL_EPSILON = 0.2;
@@ -351,7 +353,7 @@ export class TemporalDifferenceReinforcementAgent extends Agent
 	    }
 			console.log(`Episode: ${episode}, eps: ${eps}, seen: ${seen}, lookBackBuffer: ${lookBackBuffer.length}`);
 
-			if(episode >= num_episodes && num_episodes % num_episodes == 0)
+			if(episode >= yield_ever_n_episodes && yield_ever_n_episodes % num_episodes == 0)
 			{
 				yield this.network;
 			}
@@ -379,10 +381,12 @@ export class TemporalDifferenceReinforcementAgent extends Agent
 
 		let nextBestScore = null;
 		let nextBestState = null;
+
+    //For each follow-Up configuration ask the Neural Net whether it thinks its
+    //future value is better.
 		for(let followUpConfig of followUpConfigurations)
 		{
 
-			//TODO: look up reverse config in NN:
 			const evalResult =
 				(this.GAMMA * this._evalNN( followUpConfig.configuration, player )  +
 				this._evaluateConfiguration(player, followUpConfig.move, followUpConfig.configuration ).score );
