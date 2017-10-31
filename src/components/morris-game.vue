@@ -4,7 +4,7 @@
 
     <div id="controls">
 
-      <div class="level is-mobile">
+      <div class="level">
         <div class="level-left">
           <player-area
             :numberOfWins='numberOfWins[0]'

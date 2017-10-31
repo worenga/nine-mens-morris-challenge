@@ -13,13 +13,10 @@
         <pulse-loader :loading="isThinking" color="red"></pulse-loader>
       </p>
       <div class="field is-horizontal">
-        <div class="field-label is-normal">
-          <label class="label" :for="'id-'+playerName">AI:</label>
-        </div>
         <div class="field-body">
           <div class="control">
-            <div class="select">
-              <select :id="'id-'+playerName" @change="onAgentChange($event.target.value)">
+            <div class="select is-small">
+              <select @change="onAgentChange($event.target.value)">
                 <option disabled value="">Please select one</option>
                 <option v-for="option in availableAgents" :selected="option.id == selectedAgent" v-bind:value="option.id">
                   {{ option.name }}

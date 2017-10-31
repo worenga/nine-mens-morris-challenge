@@ -6,10 +6,24 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server --open",
-    "build": "echo \"Running build, this may take a while...\" && webpack",
+    "buildprod": "better-npm-run build:prod",
     "train": "babel-node --presets=env src/train.temporal.js",
-    "buildprod": "NODE_ENV=production echo \"Running build, this may take a while...\" && webpack",
-    "serve": "pm2 start process.json --no-daemon"
+    "serve": "better-npm-run serve:app"
+  },
+  "betterScripts": {
+    "build:prod": {
+      "command": "echo \"Running build, this may take a while...\" && webpack --progress --colors",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "serve:app": {
+      "command":"pm2 start process.json --no-daemon",
+      "env":
+        {
+          "PM2_SERVE_PORT":"8099"
+        }
+    }
   },
   "keywords": [
     "nine",
@@ -21,6 +35,7 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "babel-runtime": "^6.26.0",
+    "better-npm-run": "^0.1.0",
     "compass": "^0.1.1",
     "compass-mixins": "^0.12.10",
     "css-loader": "^0.28.7",
