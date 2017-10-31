@@ -5,15 +5,27 @@ import {NineMensMorrisMove} from '../game/NineMensMorrisMove.js';
 import {getRandomInt, shuffle, getRandomSubarray} from '../helpers/Util.js';
 import {Agent} from './Agent.js';
 
+
+//Trained Neural Nets:
+//No Take = Trained Neural Net that only relies on the final state as a reward
+//Take = Trained Neural Net that receives rewards for taking stones.
 import TrainedNetworkTakeReward200k from '../../assets/neural_nets/trained_220000_take_reward.neural_net.json';
 import TrainedNetworkNoTakeReward200k from '../../assets/neural_nets/trained_200000_notake_reward.neural_net.json';
-
 import TrainedNetworkTakeReward100k from '../../assets/neural_nets/trained_100000_take_reward.neural_net.json';
 import TrainedNetworkNoTakeReward100k from '../../assets/neural_nets/trained_100000_notake_reward.neural_net.json';
-
 import TrainedNetworkTakeReward50k from '../../assets/neural_nets/trained_50000_take_reward.neural_net.json';
 import TrainedNetworkNoTakeReward50k from '../../assets/neural_nets/trained_50000_notake_reward.neural_net.json';
 
+const TRAINED_NEURAL_NETS = {
+  '50k-notake': TrainedNetworkNoTakeReward50k,
+  '50k-take': TrainedNetworkTakeReward50k,
+
+  '100k-notake': TrainedNetworkNoTakeReward100k,
+  '100k-take': TrainedNetworkNoTakeReward100k,
+
+  '200k-notake': TrainedNetworkNoTakeReward200k,
+  '200k-take': TrainedNetworkTakeReward200k,
+};
 
 
 import synaptic from 'synaptic';
@@ -82,8 +94,19 @@ export class TemporalDifferenceReinforcementAgent extends Agent
 
     this._initNN();
 
-    //Initalize transpositionTable
   }
+
+  setOptions(options)
+  {
+      this.options = options;
+      if(this.options.neural_net && TRAINED_NEURAL_NETS[this.options.neural_net])
+      {
+        console.log("Using Network: ",this.options.neural_net);
+        this.network = Network.fromJSON(TRAINED_NEURAL_NETS[this.options.neural_net]);
+        this.loaded = true;
+      }
+  }
+
 
   _evaluateConfiguration(player,move,configuration)
   {
@@ -339,7 +362,6 @@ export class TemporalDifferenceReinforcementAgent extends Agent
 	_initialize()
 	{
 		this.loaded = true;
-		console.log(TrainedNetworkNoTakeReward200k);
 		this.network = Network.fromJSON(TrainedNetworkNoTakeReward200k);
 	}
 

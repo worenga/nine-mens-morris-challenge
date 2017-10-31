@@ -22,6 +22,7 @@ export class AlphaBetaAgent extends Agent
       }
     }
   }
+  
 
   _initializeTranspositionTable()
   {
@@ -36,18 +37,26 @@ export class AlphaBetaAgent extends Agent
     }
   }
 
+
   reinitializeState()
   {
     this._initializeZobrist();
     this._initializeTranspositionTable();
   }
 
+
+  setOptions(options)
+  {
+      this.options = options;
+  }
+
+
   constructor()
   {
     super();
 
+    //Hashtable for each player
     this.ZOBRIST = [ new Array(24), new Array(24) ];
-
 
     this.TRANSPOSITION_TABLE_SIZE = 100000;
 
@@ -67,6 +76,7 @@ export class AlphaBetaAgent extends Agent
 
     //Initalize transpositionTable
   }
+
 
   _evaluateConfiguration(player, configuration)
   {
@@ -101,11 +111,32 @@ export class AlphaBetaAgent extends Agent
   }
 
 
+  thinkTimeExceeded()
+  {
+    if(this.options.think_time)
+    {
+      const timeNow = new Date();
+      const diff = timeNow - this.startDate;
+      if(diff > this.options.think_time)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
   //Alpha  = best _already_ explored option for the maximizer
   //Beta   = best _already_ explored option for the minimizer
 
   miniMax(player, configuration, move, currentDepth, maxDepth, alpha, beta)
   {
+
+
+    if(this.thinkTimeExceeded())
+    {
+      return null;
+    }
+
     const opponent = 1 - player;
 
     const configurationHash = configuration.getUnifiedShiftHash(this.ZOBRIST);
@@ -158,6 +189,12 @@ export class AlphaBetaAgent extends Agent
                                   -maxScore
         );
 
+        if(result == null)
+        {
+          //Think Time exceeded
+          return null;
+        }
+
         if( -result.score > maxScore)
         {
           maxScore = -result.score;
@@ -201,8 +238,8 @@ export class AlphaBetaAgent extends Agent
       }
 
     }
-
   }
+
 
   ageTranspositionTable()
   {
@@ -218,6 +255,7 @@ export class AlphaBetaAgent extends Agent
     }
   }
 
+
   getNextMove(configuration,player,callback)
   {
 
@@ -227,19 +265,51 @@ export class AlphaBetaAgent extends Agent
     //We must increase reduce the height of the transpositionTable for this move.
     this.ageTranspositionTable();
 
-    let bestResult = null;
-    for(let i = 1; i < 7; i++)
+    if(this.options.think_time)
     {
-      this.evalCounts = 0;
-      let maxDepth= i;
-      let startDepth = 0;
-      let result = this.miniMax(player, configuration, null,
-        startDepth, maxDepth, -this.SCORE_INF, this.SCORE_INF);
-      console.log("result depth", i,result, this.evalCounts);
-      bestResult = result;
+      this.startDate = new Date();
+    }
+    else
+    {
+      this.startDate = null;
     }
 
-    let move = bestResult.move;
+    let move = null;
+
+    if(this.startDate != null && this.options.think_time) //We have a limited think time
+    {
+      let bestResult = null;
+      for(let i = 1; i < 21; i++)
+      {
+        const maxDepth = i;
+        const startDepth = 0;
+        const result = this.miniMax(player, configuration, null,
+          startDepth, maxDepth, -this.SCORE_INF, this.SCORE_INF);
+
+        if( result != null ) //Was the current level aborted due to think time?
+        {
+          console.log("Calculated Best Move for depth:",i);
+          bestResult = result;
+        }
+        else
+        {
+          break;
+        }
+
+      }
+
+      move = bestResult.move;
+    }
+    else if(this.options.moves_ahead)
+    {
+      //We have a predefined MaxDepth:
+      const maxDepth = this.options.moves_ahead + 1;
+      const startDepth = 0;
+      const result = this.miniMax(player, configuration, null,
+        startDepth, maxDepth, -this.SCORE_INF, this.SCORE_INF);
+
+      move = result.move;
+    }
 
     callback(move);
 

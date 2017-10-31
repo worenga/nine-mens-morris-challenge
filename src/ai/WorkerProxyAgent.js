@@ -1,7 +1,3 @@
-import {NineMensMorrisMove} from '../game/NineMensMorrisMove.js';
-import {MorrisGame} from '../game/NineMensMorrisGame.js';
-import {getRandomInt} from '../helpers/Util.js';
-
 import {Agent} from './Agent.js';
 
 export class WorkerProxyAgent extends Agent
@@ -11,6 +7,13 @@ export class WorkerProxyAgent extends Agent
   {
     super();
     this.worker = new Worker(options.bundle);
+    this.options = options;
+    this.worker.postMessage(["setOptions",options.agent_options]);
+  }
+
+  setOptions(options)
+  {
+    this.worker.postMessage(["setOptions",options]);
   }
 
   newGame()

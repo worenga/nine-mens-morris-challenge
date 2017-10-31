@@ -4,6 +4,8 @@ export class Agent
 
   newGame() {}
 
+  setOptions(options) {}
+
   isHuman()
   {
     return false;
