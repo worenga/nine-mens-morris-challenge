@@ -1,5 +1,14 @@
 # Kampf gegen Mühlen
-[![Build Status](https://travis-ci.org/worenga/nine-mens-morris-challenge.svg?branch=master)](https://travis-ci.org/worenga/nine-mens-morris-challenge)
+[![Build status][travis-image]][travis-url]
+[![Docker][docker-image]][docker-url]
+[![DUB](https://img.shields.io/dub/l/vibe-d.svg)]()
+
+[docker-image]: https://img.shields.io/docker/pulls/worenga/nine-mens-morris-app.svg
+[docker-url]: https://hub.docker.com/r/worenga/nine-mens-morris-app/
+
+[travis-image]: https://travis-ci.org/worenga/nine-mens-morris-challenge.svg?branch=master&style=flat-square
+[travis-url]: https://travis-ci.org/worenga/nine-mens-morris-challenge
+
 ## adesso / it-talents.de Code Competition Oktober 2017
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
