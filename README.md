@@ -10,7 +10,7 @@
 
 [travis-image]: https://travis-ci.org/worenga/nine-mens-morris-challenge.svg?branch=master&style=flat-square
 [travis-url]: https://travis-ci.org/worenga/nine-mens-morris-challenge
-
+ 
 ## adesso / it-talents.de Code Competition Oktober 2017
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
@@ -33,7 +33,7 @@ Das Spiel wird von Agenten gespielt. Im simplesten Fall ist ein Agent einfach ei
 
 Datenstruktur:
 Die Game Engine nutzt zur Representation der Spielfelder Bits in einer JavaScript Number.
-Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für jeden Spieler die Positionen auf dem Spielfeld separat. Dies ermoeglicht performante Operationen anhand von Bitmasken, sowie das Shiften von Bits bei der zur Symmetrieberechnung.
+Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für jeden Spieler die Positionen auf dem Spielfeld separat. Dies ermöglicht performante Operationen anhand von Bitmasken, sowie das Shiften von Bits bei der zur Symmetrieberechnung.
 
 ## Implementierte AI-Strategien
 
