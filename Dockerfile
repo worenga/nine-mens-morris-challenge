@@ -18,7 +18,7 @@ ENV NODE_ENV=production
 ADD src ./src
 ADD assets ./assets
 
-RUN npm run build
+RUN npm run buildprod
 
 env PM2_SERVE_PORT=${PORT}
 
