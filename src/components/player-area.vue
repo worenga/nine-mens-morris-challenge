@@ -2,16 +2,19 @@
   <div>
 
     <transition name="fade">
-    <div class="triangle-border" v-if="isActive">
-      <p class="heading has-text-centered n">Current Turn</p>
-    </div>
+      <div class="triangle-border" v-bind:class="[isActive ? '' : 'hide_opacity']">
+        <p class="heading has-text-centered n">Current Turn</p>
+      </div>
     </transition>
 
     <div class="box is-warning is-focused">
 
       <p class="title has-text-centered">{{playerName}}
-        <pulse-loader :loading="isThinking" color="red"></pulse-loader>
+        <transition name="fade">
+          <pulse-loader v-bind:class="[isThinking ? '' : 'hide_opacity']" color="red"></pulse-loader>
+        </transition>
       </p>
+
       <div class="field is-horizontal">
         <div class="field-body">
           <div class="control">
@@ -33,6 +36,7 @@
           <p class="title">{{numberOfWins}}</p>
         </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -44,13 +48,10 @@
 
 
 <style lang="scss" scoped>
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .2s;
-}
-.fade-enter, .fade-leave-to {
-  transition: opacity .2s;
-  opacity: 0;
+@import 'compass';
+@import './fade.scss';
+.hide_opacity {
+  @include opacity(0);
 }
 
 .triangle-border .heading{

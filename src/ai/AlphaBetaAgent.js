@@ -22,7 +22,7 @@ export class AlphaBetaAgent extends Agent
       }
     }
   }
-  
+
 
   _initializeTranspositionTable()
   {
@@ -74,7 +74,6 @@ export class AlphaBetaAgent extends Agent
 
     this.SCORE_DRAW = 0;
 
-    //Initalize transpositionTable
   }
 
 
@@ -105,7 +104,10 @@ export class AlphaBetaAgent extends Agent
       const ownFreedom = configuration.getDegreeOfFreedomForPlayer(player);
       const opponentFreedom = configuration.getDegreeOfFreedomForPlayer(opponent);
 
-      const score = 2*(ownFreedom-opponentFreedom) +  1 * (ownStones - opponentStones)  + 10 * (closedMills - opponentClosedMills);
+      const score = 2 * (ownFreedom - opponentFreedom) +
+                    1 * (ownStones - opponentStones) +
+                   10 * (closedMills - opponentClosedMills);
+
       return score;
     }
   }
@@ -127,7 +129,7 @@ export class AlphaBetaAgent extends Agent
 
   //Alpha  = best _already_ explored option for the maximizer
   //Beta   = best _already_ explored option for the minimizer
-
+  //This is essentially  based on https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
   miniMax(player, configuration, move, currentDepth, maxDepth, alpha, beta)
   {
 
@@ -240,7 +242,8 @@ export class AlphaBetaAgent extends Agent
     }
   }
 
-
+  //Transposition Table must Age upon subsequent move calculations otherwise
+  //their values cannot be trusted for the next getNextMove call.
   ageTranspositionTable()
   {
     for(let player = 0; player < 2; player++)
@@ -276,8 +279,9 @@ export class AlphaBetaAgent extends Agent
 
     let move = null;
 
-    if(this.startDate != null && this.options.think_time) //We have a limited think time
+    if(this.startDate != null && this.options.think_time)
     {
+      //We have a limited think time, iterative deepening...
       let bestResult = null;
       for(let i = 1; i < 21; i++)
       {
@@ -302,7 +306,7 @@ export class AlphaBetaAgent extends Agent
     }
     else if(this.options.moves_ahead)
     {
-      //We have a predefined MaxDepth:
+      //We have a predefined MaxDepth to calculate.
       const maxDepth = this.options.moves_ahead + 1;
       const startDepth = 0;
       const result = this.miniMax(player, configuration, null,

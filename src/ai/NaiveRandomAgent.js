@@ -5,6 +5,9 @@ import {getRandomInt} from '../helpers/Util.js';
 
 import {Agent} from './Agent.js';
 
+//This is a simple AI that randomly chooses Moves.
+//It was used for early testing and was the first strategy.
+//It is also the benchmark strategy for all other AI.
 export class NaiveRandomAgent extends Agent
 {
 
@@ -40,7 +43,7 @@ export class NaiveRandomAgent extends Agent
         const randomIdx = getRandomInt(0,piecesToRemove.length - 1);
         removedStone = piecesToRemove[randomIdx];
     }
-    
+
     let move = new NineMensMorrisMove(player,to,from,removedStone);
 
 

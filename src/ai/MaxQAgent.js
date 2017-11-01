@@ -9,6 +9,7 @@ import {Agent} from './Agent.js';
 export class MaxQAgent extends Agent
 {
 
+  //Prepare a hash IV for Zobrist Hashing
   _initializeZobrist()
   {
     //Initalize transpositionTable
@@ -42,9 +43,14 @@ export class MaxQAgent extends Agent
 
     this.SCORE_START = 100;
 
-    //Initalize transpositionTable
   }
 
+  setOptions(options)
+  {
+      this.options = options;
+  }
+
+  //Evaluate current Position (same as AlphaBeta)
   _evaluateConfiguration(player,move,configuration)
   {
 
@@ -92,106 +98,111 @@ export class MaxQAgent extends Agent
 
     //Initalize Q Matrix to Zero:
     let maxQ_Table = {};
-    const iterations = 100;
+    const iterations = this.options.iterations || 100;
     const gamma = 0.9;
 
-
+    //Iterate over successor States
     for(let startState of configuration.generateSuccessorConfiguration(player))
     {
-      //console.log(startState);
-      for(let i=0;i<iterations;i++)
+
+      for( let j=0; j < iterations; j++ )
       {
         let currentNextState = startState;
         let currentPlayer = player;
-        
-        //Do While the goal state hasn't been reached...
+
+        //Do while the goal state hasn't been reached...
         let gameHasEnded = false;
         let currentConfigurationHash = configuration.getUnifiedShiftHash(this.ZOBRIST);
 
         let nextConfigurationHash;
         let i=0;
 
-          while(!gameHasEnded)
+        while(!gameHasEnded)
+        {
+          if(i++ > 30) //Impair Horizon for efficiency.
           {
-            if(i++ > 500)
-            {
-              break;
-            }
-            //console.log(i,currentNextState);
-            let res = this._evaluateConfiguration(player,currentNextState.move,currentNextState.configuration);
-            if(res.isFinal === true)
-            {
-              gameHasEnded = true;
-            }
-            let score = res.score;
-
-
-            //Update MaxQ:
-            if(!maxQ_Table[currentConfigurationHash])
-            {
-              maxQ_Table[currentConfigurationHash] = {};
-            }
-
-            //Hash the move as well
-            //TODO: Our hash only checks
-            //for symmetries alongside the reached states
-            const moveHash = currentNextState.move.from +
-                             ((currentNextState.move.to * 24) +
-                             (currentNextState.move.removedPiece)) * 24;
-
-
-            let maxQ_NextStates = 0;
-
-            if(!gameHasEnded)
-            {
-              let followUpConfigurations = Array.from(currentNextState.configuration.
-                generateSuccessorConfiguration(1 - currentPlayer));
-
-              currentNextState = shuffle(followUpConfigurations)[0];
-              nextConfigurationHash = currentNextState.configuration.getUnifiedShiftHash(this.ZOBRIST);
-
-
-              maxQ_NextStates = 0;
-              for(let followUpStates of followUpConfigurations)
-              {
-                nextConfigurationHash = followUpStates.configuration.getUnifiedShiftHash(this.ZOBRIST);
-                let lookup = maxQ_Table[nextConfigurationHash];
-                if(lookup!==undefined){
-                  let movesQ = Object.values(lookup);
-                  if(movesQ.length > 0)
-                  {
-                    maxQ_NextStates = Math.max(...movesQ);
-                  }
-                }
-              }
-
-            }
-
-            maxQ_Table[currentConfigurationHash][moveHash] = score + gamma * maxQ_NextStates;
-
-            //prepare next loop
-            currentPlayer = 1 - currentPlayer;
-
-            currentConfigurationHash = nextConfigurationHash;
+            break;
           }
 
+          let res = this._evaluateConfiguration(player,currentNextState.move,currentNextState.configuration);
+
+          if(res.isFinal === true)
+          {
+            gameHasEnded = true;
+          }
+          let score = res.score;
+
+
+          //Update MaxQ:
+          if(!maxQ_Table[currentConfigurationHash])
+          {
+            maxQ_Table[currentConfigurationHash] = {};
+          }
+
+          //Hash the move as well
+          //TODO: Our hash only checks
+          //for symmetries alongside the reached states
+          const moveHash = currentNextState.move.from +
+                           ((currentNextState.move.to * 24) +
+                           (currentNextState.move.removedPiece)) * 24;
+
+
+          let maxQ_NextStates = 0;
+
+          if(!gameHasEnded)
+          {
+            let followUpConfigurations = Array.from(currentNextState.configuration.
+              generateSuccessorConfiguration(1 - currentPlayer));
+
+            currentNextState = shuffle(followUpConfigurations)[0];
+            nextConfigurationHash = currentNextState.configuration.getUnifiedShiftHash(this.ZOBRIST);
+
+
+            maxQ_NextStates = 0;
+            for(let followUpStates of followUpConfigurations)
+            {
+              nextConfigurationHash = followUpStates.configuration.getUnifiedShiftHash(this.ZOBRIST);
+              let lookup = maxQ_Table[nextConfigurationHash];
+              if(lookup!==undefined){
+                let movesQ = Object.values(lookup);
+                if(movesQ.length > 0)
+                {
+                  maxQ_NextStates = Math.max(...movesQ);
+                }
+              }
+            }
+
+          }
+
+          //Update Cache
+          maxQ_Table[currentConfigurationHash][moveHash] = score + gamma * maxQ_NextStates;
+
+          //prepare next loop
+          currentPlayer = 1 - currentPlayer;
+          currentConfigurationHash = nextConfigurationHash;
         }
+
+      }
     }
 
     const initialConfigurationHash = configuration.getUnifiedShiftHash(this.ZOBRIST);
+
     let bestMax = -(this.SCORE_WIN + 1);
     let bestMove = null;
+
     for(let followUpConfiguration of configuration.generateSuccessorConfiguration(player))
     {
+
       const moveHash = followUpConfiguration.move.from +
                        (followUpConfiguration.move.to * 24 +
                        followUpConfiguration.move.removedPiece) * 24;
-      console.log(maxQ_Table[initialConfigurationHash][moveHash],followUpConfiguration.move);
+
       if((maxQ_Table[initialConfigurationHash][moveHash]) > bestMax)
       {
         bestMax = maxQ_Table[initialConfigurationHash][moveHash];
         bestMove = followUpConfiguration.move;
       }
+
     }
 
     callback(bestMove);

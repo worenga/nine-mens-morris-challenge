@@ -28,6 +28,8 @@ import {NineMensMorrisMove} from './NineMensMorrisMove.js';
 */
 
 
+//Encode at which position in the game board Mills are possible
+//Precalculated for better performance.
 const millBitmasks = [
   ( 1 <<  0) | ( 1 <<  1) | ( 1 <<  2),
   ( 1 <<  8) | ( 1 <<  9) | ( 1 << 10),
@@ -47,7 +49,8 @@ const millBitmasks = [
   ( 1 <<  2) | ( 1 <<  3) | ( 1 <<  4)
 ];
 
-
+//Encode for which position of the board the player is able to move.
+//Precalculated for better performance.
 const freedomMasks = [
     (1 <<  7) | (1 <<  1)                              ,//0
     (1 <<  0) | (1 <<  2) | (1 <<  9)                  ,//1
@@ -77,6 +80,7 @@ const freedomMasks = [
     (1 <<  22) | (1 << 16) | (1 << 15)                 ,//23
 ];
 
+
 export class NineMensMorrisGameConfiguration
 {
 
@@ -91,7 +95,7 @@ export class NineMensMorrisGameConfiguration
     this.removedStones = Object.assign({}, removedStones);
   }
 
-
+  //Which mills are closed on the board?
   static getClosedMillsIndicesForStones(stones)
 	{
 		let foundMills = [];
@@ -106,7 +110,7 @@ export class NineMensMorrisGameConfiguration
 		return foundMills;
 	}
 
-
+  //Undo a a given move
   undoMove(move)
   {
     if(move.from !== null)
@@ -125,7 +129,7 @@ export class NineMensMorrisGameConfiguration
 
   }
 
-
+  //Quantify the freedom the player has.
   getDegreeOfFreedomForPlayer(player)
   {
     const positions = this.getPositionsForPlayer(player);
@@ -139,7 +143,7 @@ export class NineMensMorrisGameConfiguration
     return bitCount(freePositions&playerFreedomMask);
   }
 
-
+  //How many closed mills does the player have?
 	getClosedMillsIndicesForPlayer(player)
 	{
 		return NineMensMorrisGameConfiguration.getClosedMillsIndicesForStones(
@@ -148,6 +152,7 @@ export class NineMensMorrisGameConfiguration
 	}
 
 
+  //Is the given position part of a mill for the given player?
   isPartOfMill(position,player)
 	{
 		for(let millIndex = 0; millIndex < millBitmasks.length; millIndex++)
@@ -163,6 +168,7 @@ export class NineMensMorrisGameConfiguration
 	}
 
 
+  //Make the move
   persistMove(move)
   {
     if(move.from !== null)
@@ -180,6 +186,7 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+  //A value that identifies the current mill state uniquely
   static getMillHash(millIndices)
   {
     let hash = 0;
@@ -190,14 +197,14 @@ export class NineMensMorrisGameConfiguration
     return hash;
   }
 
-
+  //Check whether a new mill has been closed.
   static newMillClosed(beforeMoveHash,afterMoveHash)
   {
     return ((beforeMoveHash ^ afterMoveHash) !== 0) &&
             bitCount(afterMoveHash) >= bitCount(beforeMoveHash);
   }
 
-
+  //Does this move require a stone to be taken from the board?
   moveRequiresRemoval(player,from,to)
   {
     const beforeMove = NineMensMorrisGameConfiguration.getMillHash(
@@ -218,25 +225,25 @@ export class NineMensMorrisGameConfiguration
     return NineMensMorrisGameConfiguration.newMillClosed(beforeMove,afterTmpMove);
   }
 
-
+  //Get a bitvector of free Positions
   getFreePositionVector()
   {
     return ~(this.stones[0] | this.stones[1]);
   }
 
-
+  //Check whether the given position is free
   spotIsFree( position )
   {
     return (((this.getFreePositionVector() >> position) & 1) === 1 );
   }
 
-
+  //Retrieve the positions the given player has set stones to.
   getPositionsForPlayer( player )
   {
     return getSetBitIndices(this.stones[player],24);
   }
 
-
+  //Remove a given stone from the player from the current configuration
   removeStone( player, position )
   {
       this.stones[player] &= ~(1 << position);
@@ -249,6 +256,48 @@ export class NineMensMorrisGameConfiguration
 		return this.getClosedMillsIndicesForPlayer(player).length;
 	}
 
+  /*
+
+    Swaps the gameboard's inner and outer rings
+
+    Example Prior to function call
+
+    0--------------1-------------2    <--  (outer) ring 0
+    |              |             |
+    |      8-------9------10     |   <--  (inner) ring 1
+    |      |       |       |     |
+    |      |  16--17--18   |     |  <--  (innermost) ring 2
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    7-----15--23      19--11-----3
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    |      |  22--21--20   |     |
+    |      |       |       |     |
+    |     14------13------12     |
+    |              |             |
+    6--------------5-------------4
+
+
+    After function call:
+
+    16----------- 17------------18    <--  (outer) previously 2
+    |              |             |
+    |      8-------9------10     |
+    |      |       |       |     |
+    |      |   0---1---2   |     |  <--  (innermost) previously 0
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    23----15---7       3--11----19
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    |      |   6---5---4   |     |
+    |      |       |       |     |
+    |     14------13------12     |
+    |              |             |
+    22------------21------------20
+
+  */
 
   static _getInnerOuterSwappedConfiguration( left, right )
   {
@@ -259,6 +308,50 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+
+   /*
+
+    Swaps the gameboard's inner and outer rings
+
+    Example Prior to function call
+
+    0--------------1-------------2    <--  (outer) ring 0
+    |              |             |
+    |      8-------9------10     |   <--  (inner) ring 1
+    |      |       |       |     |
+    |      |  16--17--18   |     |  <--  (innermost) ring 2
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    7-----15--23      19--11-----3
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    |      |  22--21--20   |     |
+    |      |       |       |     |
+    |     14------13------12     |
+    |              |             |
+    6--------------5-------------4
+
+
+    After function call:
+
+    6--------------5-------------4     ------------------
+    |              |             |
+    |      14-----13------12     |
+    |      |       |       |     |
+    |      |  22--21--20   |     |            / \
+    |      |   |       |   |     |             |
+    |      |   |       |   |     |             |
+    7-----15--23      19--11-----3             |
+    |      |   |       |   |     |             |
+    |      |   |       |   |     |            \ /
+    |      |  16--17--18   |     |
+    |      |       |       |     |
+    |      8-------9------10     |
+    |              |             |
+    0--------------1-------------2     ------------------
+
+
+  */
   static _getHorizontalMirroredConfiguration( left, right )
   {
 
@@ -335,7 +428,8 @@ export class NineMensMorrisGameConfiguration
     return [newLeft,newRight];
   }
 
-
+  //Same as _getHorizontalMirroredConfiguration, but with the morror axis turned
+  //around 90deg.
   static _getVerticalMirroredConfiguration( left, right )
   {
 
@@ -414,6 +508,44 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+  /*
+  * Shift the Stones by n Bit within the Ring.
+
+    0--------------1-------------2    <--  (outer) ring 0
+    |              |             |
+    |      8-------9------10     |   <--  (inner) ring 1
+    |      |       |       |     |
+    |      |  16--17--18   |     |  <--  (innermost) ring 2
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    7-----15--23      19--11-----3
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    |      |  22--21--20   |     |
+    |      |       |       |     |
+    |     14------13------12     |
+    |              |             |
+    6--------------5-------------4
+
+
+    After function call (Shifted by 2)
+
+    6--------------7-------------0
+    |              |             |
+    |      14-------15-----8     |
+    |      |       |       |     |
+    |      |  22--23--16   |     |  <--  Rotated by 2 (90deg)
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    5-----13--21      17---9-----1
+    |      |   |       |   |     |
+    |      |   |       |   |     |
+    |      |  20--19--18   |     |
+    |      |       |       |     |
+    |     12------11------10     |
+    |              |             |
+    4--------------3-------------2
+    */
   static _getShiftedStoneConfiguration( shiftByBit, left, right )
   {
     //We have 3 rings, shift them accordingly.
@@ -448,7 +580,9 @@ export class NineMensMorrisGameConfiguration
   }
 
 
-
+  //Calculate all possible mutations of the give configuration
+  //Return a unified configuration (the one with the highest stones[0] value,
+  //stones[1] is tie-breaker);
   getUnifiedConfiguration()
   {
     //So much symmetry...
@@ -492,7 +626,7 @@ export class NineMensMorrisGameConfiguration
     return [bestRotationLeft,bestRotationRight];
   }
 
-
+  //Construct a new Configuration for given unified array.
   constructUnifiedConfiguration()
   {
     const unifiedConfiguration = this.getUnifiedConfiguration();
@@ -501,7 +635,8 @@ export class NineMensMorrisGameConfiguration
   }
 
 
-  //Compute equivalent rotations and mirrorings
+  //Compute equivalent rotations and mirrorings, and get a hash value given the
+  //Random Zobrist Initialization Vector
   getUnifiedShiftHash(zobristTable)
   {
     const unifiedConfiguration = this.getUnifiedConfiguration();
@@ -510,7 +645,7 @@ export class NineMensMorrisGameConfiguration
 
   }
 
-
+  //Helper Function for applying the Zobrist Hash
   _getHash(zobristTable, left, right, removedLeft, removedRight)
   {
     let hash = (removedLeft << (24+4))  & (removedRight << (24+8));
@@ -535,6 +670,7 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+  //Get a Hash value for the given configuration and Zobrist IV
   getConfigurationHash(zobristTable)
   {
     return this._getHash(zobristTable,
@@ -546,19 +682,14 @@ export class NineMensMorrisGameConfiguration
   }
 
 
-
+  //How many stones are set by the given player on the board?
   getAmountStones(player)
   {
     return bitCount(this.stones[player]);
   }
 
-
-  getNumberOfRemovedStones(player)
-  {
-    return this.removedStones[player];
-  }
-
-
+  //Can the given position at ring ringPos and level level in the board
+  // be moved by player player?
   canBeMoved(freePositions,level,ringPos,player)
   {
     const idx = level * 8 + ringPos;
@@ -605,10 +736,11 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+  //In which Phase of the Game is the given Player?
   getPhaseForPlayer(player)
 	{
 		const amountStones = this.getAmountStones(player);
-		const removedStones = this.getNumberOfRemovedStones(player);
+		const removedStones = this.getRemovedStonesForPlayer(player);
 
 		if ( amountStones + removedStones < 9 )
 		{
@@ -626,13 +758,14 @@ export class NineMensMorrisGameConfiguration
 	}
 
 
+  //Is the presented configuration a draw?
   isDraw()
   {
     return ( this.playerCanMove(0) === false &&
              this.playerCanMove(1) === false );
   }
 
-
+  //Has the given player won?
   hasWon( player )
   {
     const opponent = 1 - player;
@@ -641,6 +774,7 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+  //Is the player allowed to execute the move from from to to?
   playerAllowedToMove( player, from, to )
 	{
 		const opponent = 1 - player;
@@ -712,6 +846,7 @@ export class NineMensMorrisGameConfiguration
 	}
 
 
+  //Is the given player able to move at all?
   playerCanMove( player )
   {
     const phase = this.getPhaseForPlayer(player);
@@ -749,32 +884,7 @@ export class NineMensMorrisGameConfiguration
   }
 
 
-  encodePosToHumanReadable(pos)
-  {
-    //TODO: write this function and vice versa
-    /*
-    0, 7, 6 -> a
-    8, 15, 14 -> b
-    16, 23, 22 -> c
-    1, 9, 17, 21, 13, 5 -> d
-    18, 19, 20 -> e
-    10, 11,12 -> f
-    0, 1, 2 -> g
-    */
-
-    /*
-    0, 1, 2 -> 7
-    8, 9, 10 -> 6
-    16, 17, 18 -> 5
-    7, 15, 23, 19, 11, 3 -> 4
-    22, 21, 20 -> 3
-    14, 13, 12 -> 2
-    6, 5, 4 -> 1
-    */
-
-  }
-
-
+  //Which pieces of the game board can the player steal from the opponent?
   getRemovablePiecesForPlayer( player )
   {
     const opponent = 1 - player;
@@ -808,12 +918,13 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+  //How many stones have been removed from the given player?
   getRemovedStonesForPlayer( player )
 	{
 		return this.removedStones[player];
 	}
 
-
+  //Constructor for the configuration that is generated when applying move to this configuration
   constructFollowUpConfiguration( player, move )
   {
     let config = new NineMensMorrisGameConfiguration(this.stones, this.removedStones);
@@ -822,13 +933,14 @@ export class NineMensMorrisGameConfiguration
   }
 
 
+  //Get a string representation for the configuration
   getStringRepr()
   {
     return `${this.stones[0]}-${this.stones[1]}`;
   }
 
 
-
+  //Get all possible successor configurations from this move (Generator).
   * generateSuccessorConfiguration( player )
   {
     //If we are in P1, we can essentially move anywhere where it is free:

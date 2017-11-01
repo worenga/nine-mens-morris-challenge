@@ -16,7 +16,7 @@ export class NineMensMorrisGame extends EventEmitter
 		this.moves = [];
 	}
 
-
+	//Reset the Game to its initial State
 	reset()
 	{
 		this.triggerEvent("game:beforereset");
@@ -33,7 +33,7 @@ export class NineMensMorrisGame extends EventEmitter
 
 	}
 
-
+	//Check whether Player can make a move or not (false, if not)
 	playerAllowedToMove(player,from,to)
 	{
 
@@ -46,11 +46,11 @@ export class NineMensMorrisGame extends EventEmitter
 			return false;
 		}
 
-		//Redirect to Configuration...
+		//Redirect to Game Configuration...
 		return this.configuration.playerAllowedToMove( ...arguments );
 	}
 
-
+	//
 	createAndApplyMove( player, from, to, removedPiece=null )
 	{
 		if( this.playerAllowedToMove( player, from, to ) )
@@ -190,7 +190,7 @@ export class NineMensMorrisGame extends EventEmitter
 			{
 				if( ++moveHashtable[gameState.getStringRepr()] > 3 )
 				{
-					return {draw: true, type: 'move-wise'};
+					return {draw: true, type: 'position-wise'};
 				}
 			}
 		}

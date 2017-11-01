@@ -16,6 +16,7 @@ import TrainedNetworkNoTakeReward100k from '../../assets/neural_nets/trained_100
 import TrainedNetworkTakeReward50k from '../../assets/neural_nets/trained_50000_take_reward.neural_net.json';
 import TrainedNetworkNoTakeReward50k from '../../assets/neural_nets/trained_50000_notake_reward.neural_net.json';
 
+
 const TRAINED_NEURAL_NETS = {
   '50k-notake': TrainedNetworkNoTakeReward50k,
   '50k-take': TrainedNetworkTakeReward50k,

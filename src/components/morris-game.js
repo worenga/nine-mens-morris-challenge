@@ -25,12 +25,25 @@ export default
   data ()
   {
     return {
+
       activePlayerAgents: [null,null],
+
       activePlayer: 0,
+
       numberOfWins: this.winStats,
+
+      showDrawMessage: false,
+
+      drawType:'',
+
       isThinking: [false,false],
+
+      selectedAgent: [{id:null},{id:null}],
+
       availableAgents: [
+
         {id:'human', name: "Human Player", controller: HumanAgent},
+
         {id:'random', name:"AI: Random", controller: WorkerProxyAgent, args: { bundle: "ai_random.bundle.js"} },
 
         {id:'alphabeta-1',
@@ -112,7 +125,60 @@ export default
                }
         },
 
-        {id:'max_q', name:"AI: MaxQ ", controller: WorkerProxyAgent, args: { bundle: "ai_maxq.bundle.js"} },
+        {id:'max_q10',
+          name:"AI: MaxQ 10 Games each",
+          controller: WorkerProxyAgent,
+          args: {
+            bundle: "ai_maxq.bundle.js",
+            agent_options: {iterations: 10 }
+          }
+        },
+
+        {id:'max_q25',
+          name:"AI: MaxQ 25 Games each",
+          controller: WorkerProxyAgent,
+          args: {
+            bundle: "ai_maxq.bundle.js",
+            agent_options: {iterations: 25 }
+          }
+        },
+
+        {id:'max_q50',
+          name:"AI: MaxQ 50 Games each",
+          controller: WorkerProxyAgent,
+          args: {
+            bundle: "ai_maxq.bundle.js",
+            agent_options: {iterations: 50 }
+          }
+        },
+
+        {id:'max_q75',
+          name:"AI: MaxQ 75 Games each",
+          controller: WorkerProxyAgent,
+          args: {
+            bundle: "ai_maxq.bundle.js",
+            agent_options: {iterations: 75 }
+          }
+        },
+
+        {id:'max_q100',
+          name:"AI: MaxQ 100 Games each",
+          controller: WorkerProxyAgent,
+          args: {
+            bundle: "ai_maxq.bundle.js",
+            agent_options: {iterations: 100 }
+          }
+        },
+
+        {id:'max_q200',
+          name:"AI: MaxQ 200 Games each",
+          controller: WorkerProxyAgent,
+          args: {
+            bundle: "ai_maxq.bundle.js",
+            agent_options: {iterations: 200 }
+          }
+        },
+
 
         {id:'temporal-50k-notake',
          name:"AI: TD-Learning (50k Epochs trained)",
@@ -141,8 +207,7 @@ export default
           }
         },
 
-      ],
-      selectedAgent: [{id:null},{id:null}],
+      ]
     };
   },
 
@@ -170,6 +235,8 @@ export default
     {
       if(isDraw)
       {
+        this.showDrawMessage=true;
+        this.drawType=typeOfDraw;
         this.ui.setOverlay(NineMensMorrisBoardUi.OVERLAY_DRAW,typeOfDraw);
         console.log("Game Ended: Draw", typeOfDraw);
       }
@@ -305,6 +372,8 @@ export default
       //the name setTimeout is misleading here,
       //its enqueing the action into the global JS event loop
       setTimeout( () => {
+
+        this.showDrawMessage=false;
 
         for(let agent of this.activePlayerAgents)
         {

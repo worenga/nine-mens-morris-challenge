@@ -19,6 +19,35 @@
 
         <div class="level-item">
           <canvas id="gameboard"></canvas>
+
+          <transition name="fade">
+            <div v-show="showDrawMessage" class="over-canvas has-centered-text notification is-warning">
+              <button class="delete" @click="showDrawMessage=false"></button>
+              The game ended in a <strong>draw</strong>.
+
+              <div v-if="drawType=='position-wise'">
+                The same position was encountered 3 times.
+              </div>
+
+              <div v-if="drawType=='move-wise'">
+                No mill has been closed within the last 50 moves.
+              </div>
+
+              <div v-if="drawType=='no-move'">
+                Neither of both players can move.
+              </div>
+
+              <div class="buttons">
+                <span class="is-pulled-right button is-small is-outlined" @click="reset">
+                  <span class="icon is-medium">
+                    <i class="fa fa-fast-backward"></i>
+                  </span>
+                  <span>New Game</span>
+                </span>
+              </div>
+            </div>
+          </transition>
+
         </div>
 
         <div class="level-right">
@@ -37,23 +66,21 @@
       <div class="level is-mobile">
         <div class="level-item">
           <div class="field is-grouped">
-            <div class="control">
-              <button class="button is-medium is-info" @click="undo">
+            <div class="buttons is-centered">
+              <button class="button is-medium is-info is-outlined" @click="undo">
                 <span class="icon is-medium">
                   <i class="fa fa-step-backward"></i>
-                </span> <span>Undo Last Move</span></button>
-            </div>
+                </span> <span>Undo Last Move</span>
+              </button>
 
-            <div class="control">
               <button class="button is-medium is-outlined" @click="reset">
                 <span class="icon is-medium">
                   <i class="fa fa-fast-backward"></i>
                 </span>
-                <span>Reset</span> </button>
-            </div>
+                <span>New Game</span>
+              </button>
 
-            <div class="control">
-              <button class="button is-medium is-danger" @click="resetWinStats">
+              <button class="button is-medium is-danger is-outlined" @click="resetWinStats">
                 <span class="icon is-medium">
                   <i class="fa fa-trash-o"></i>
                 </span>
@@ -76,6 +103,18 @@
 
 
 
-<style scoped>
-  /* Write your styles for the component in here */
+<style lang="scss" scoped>
+@import './fade.scss';
+@import 'compass';
+.button_draw
+{
+  margin:0 auto;
+}
+.over-canvas
+{
+  position:absolute;
+  @include opacity(0.97);
+  top: 490px;
+  width: 500px;
+}
 </style>
