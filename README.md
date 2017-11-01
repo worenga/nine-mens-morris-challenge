@@ -1,10 +1,20 @@
 # Kampf gegen Mühlen
+[![Build status][travis-image]][travis-url]
+[![Docker][docker-image]][docker-url]
+[![DUB](https://img.shields.io/dub/l/vibe-d.svg)]()
+
+[docker-image]: https://img.shields.io/docker/pulls/worenga/nine-mens-morris-app.svg
+[docker-url]: https://hub.docker.com/r/worenga/nine-mens-morris-app/
+
+[travis-image]: https://travis-ci.org/worenga/nine-mens-morris-challenge.svg?branch=master&style=flat-square
+[travis-url]: https://travis-ci.org/worenga/nine-mens-morris-challenge
+
 ## adesso / it-talents.de Code Competition Oktober 2017
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
 Einreichung für die it-talents.de/Adesso Code-Competition Oktober 2017 [Kampf gegen Mühlen](https://www.it-talents.de/foerderung/code-competition/code-competition-02-2017)
 
-Eine ES6-Webapplikation auf Basis von [vue.js](), [bulma](https://bulma.io), [webpack](https://github.com/webpack/webpack) [fabric.js](http://fabricjs.com/) und [synaptic](https://github.com/cazala/synaptic/) für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI (Random, Minimax mit AlphaBeta Pruning sowie, MaxQ mit Transition Tables und Temporal Difference Reinforcement Learning) mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser. Die rechenintensiven AI-Berechnungen finden in einem Web Worker statt.
+Eine ES6-Webapplikation auf Basis von [vue.js](https://vuejs.org/), [bulma](https://bulma.io), [webpack](https://github.com/webpack/webpack), [Babel](https://babeljs.io/), [fabric.js](http://fabricjs.com/) und [synaptic](https://github.com/cazala/synaptic/) für das Spiel Mühle im Browser. Es stehen unterschiedlich starke AI (Random, Minimax mit AlphaBeta Pruning sowie, MaxQ mit Transition Tables und Temporal Difference Reinforcement Learning) mit diversen Charakteristika zur Verfuegung. Das Spiel laeuft komplett im Browser. Die rechenintensiven AI-Berechnungen finden in einem Web Worker statt.
 
 
 ## Kurzbeschreibung / Übersicht
@@ -27,7 +37,7 @@ Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für j
 
 * *MiniMax mit Alpha-Beta Pruning, Transposition Tables/Zobrist Hashing und Iterative Deepening*:
   Es wird ein Suchbaum auf Basis der aktuellen Spielposition erstellt. Unter der Annahme dass der Gegenspieler optimal Spielt   berechnet der Algorithmus den besten Spielzug bis zu einer gewissen Spieltiefe.
-  Um zu verhindern, dass bisher besuchte Spielstände mehrfach ausgewertet werden, wird a) in Transpositionstabellen gespeichert (Caching) b) Spielstaende unabhängig Ihrer Symmetrieeigenschaften (vgl. [Mühle Lehrbuch]{http://muehlespieler.de/download/muehle_lehrbuch.pdf}) betrachtet (Symmetrische Spielfelder werden uniformiert) und c) es wird Alpha-Beta Pruning benutzt (eine Taktik um geschickt Subbäume im Spielbaum die der ideale Gegenspieler nicht wählen würde auszuschließen).
+  Um zu verhindern, dass bisher besuchte Spielstände mehrfach ausgewertet werden, wird a) in Transpositionstabellen gespeichert (Caching) b) Spielstaende unabhängig Ihrer Symmetrieeigenschaften (vgl. [Mühle Lehrbuch](http://muehlespieler.de/download/muehle_lehrbuch.pdf) betrachtet (Symmetrische Spielfelder werden uniformiert) und c) es wird Alpha-Beta Pruning benutzt (eine Taktik um geschickt Subbäume im Spielbaum die der ideale Gegenspieler nicht wählen würde auszuschließen). Als Bewertungsfunktion werden die Anzahl der genommenen Steine, die Bewegungsfreiheit sowie die Differenz in Muehlen benutzt.
   Der Spieler kann entweder bestimmen bis zur welcher Tiefe der Computer die Spielzüge vorberechnen kann (was unter Umständen recht lange dauern kann) oder Iterative-Deepening benutzen und ein festes Zeitfenster vorgeben in dem der Computer antworten muss.
 
 * *Deep Temporal Difference (TD) Reinforcement Learning*:
@@ -35,7 +45,7 @@ Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für j
   Wir haben ein Neuronales Netz für 10 Stunden auf 2500 Spielen und 200k Spielzügen traininert.
   Es koennen unterschiedliche Trainingsstufen ausgewählt werden.
   Vgl. [Reinforcement Learning for Board Games:
-The Temporal Difference Algorithm]{http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.d/TR-TDgame_EN.pdf}
+The Temporal Difference Algorithm](http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.d/TR-TDgame_EN.pdf)
 
 * *MaxQ*:
   Es werden 100 Spielzüge ausgehend von dem Aktuellen Spielzug mit dem bisherigen Wissen exploriert und die einzelnen 
@@ -47,13 +57,13 @@ The Temporal Difference Algorithm]{http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.
 
 ## Live Demo
 
-Das bereitgestellte Docker Image wird auf der Amazon Cloud gehostet http://18.194.116.182:8099/
+Das bereitgestellte Docker Image wird auf der Amazon Cloud gehostet http://18.194.116.182:8099/ bzw. unter
+https://morris.benedikt-wolters.de/ .
 
 
 ## Installation
 
 Die Installation ist am einfachsten ueber das Docker Image:
-
 Ein Entsprechend vorbereitetes Docker Image findet sich unter https://hub.docker.com/r/worenga/nine-mens-morris-app/
 
 ```
