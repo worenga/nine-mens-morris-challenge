@@ -7,7 +7,9 @@
 
 	<section class="section">
 		<div class="container">
-
+			<noscript>
+				This application requires JavaScript to be enabled!
+			</noscript>
 			<!-- v-cloak will hide the element unless Vue.js has mounted -->
 			<div id="gameboard-container" v-cloak>
 				<morris-game @stats-update="updateStats" :win-stats="this.winStats"/>
