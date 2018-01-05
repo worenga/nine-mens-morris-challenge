@@ -2,8 +2,8 @@
 [![Build status][travis-image]][travis-url]
 [![Docker][docker-image]][docker-url]
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docker Automated build](https://img.shields.io/docker/automated/worenga/nine-mens-morris-challenge.svg?style=flat-square)]()
-[![Docker Build Status](https://img.shields.io/docker/build/worenga/nine-mens-morris-challenge.svg?style=flat-square)]()
+[![Docker Automated build](https://img.shields.io/docker/automated/worenga/nine-mens-morris-challenge.svg?style=flat-square)](https://hub.docker.com/r/worenga/nine-mens-morris-challenge/builds/)
+[![Docker Build Status](https://img.shields.io/docker/build/worenga/nine-mens-morris-challenge.svg?style=flat-square)](https://hub.docker.com/r/worenga/nine-mens-morris-challenge/builds/)
 
 [docker-image]: https://img.shields.io/docker/pulls/worenga/nine-mens-morris-app.svg
 [docker-url]: https://hub.docker.com/r/worenga/nine-mens-morris-app/
