@@ -7,7 +7,6 @@
 
 [docker-image]: https://img.shields.io/docker/pulls/worenga/nine-mens-morris-app.svg
 [docker-url]: https://hub.docker.com/r/worenga/nine-mens-morris-app/
-
 [travis-image]: https://travis-ci.org/worenga/nine-mens-morris-challenge.svg?branch=master&style=flat-square
 [travis-url]: https://travis-ci.org/worenga/nine-mens-morris-challenge
  
