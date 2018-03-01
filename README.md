@@ -58,9 +58,10 @@ The Temporal Difference Algorithm](http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.
 
 ## Live Demo
 
-Das bereitgestellte Docker Image wird auf der Amazon Cloud gehostet http://35.158.18.145:8099/ bzw. unter
+Das bereitgestellte Docker Image ~~wird auf der Amazon Cloud gehostet http://35.158.18.145:8099/ bzw.~~* unter
 https://morris.benedikt-wolters.de/ .
 
+*Anmerkung: Nach ueber 4 Monaten Auswertungzeit der Coding Challenge bin ich nicht laenger bereit die Kosten fuer ein EC2 Demo Hosting bereitzustellen.
 
 ## Installation
 
