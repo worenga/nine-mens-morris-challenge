@@ -1,16 +1,15 @@
 # Kampf gegen Mühlen
 [![Build status][travis-image]][travis-url]
 [![Docker][docker-image]][docker-url]
-[![DUB](https://img.shields.io/dub/l/vibe-d.svg)]()
-[![Docker Automated build](https://img.shields.io/docker/automated/https://img.shields.io/docker/automated/worenga/nine-mens-morris-challenge.svg?style=flat-square)]()
-[![Docker Build Status](https://img.shields.io/docker/build/worenga/nine-mens-morris-challenge.svg?style=flat-square)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker Automated build](https://img.shields.io/docker/automated/worenga/nine-mens-morris-challenge.svg?style=flat-square)](https://hub.docker.com/r/worenga/nine-mens-morris-challenge/builds/)
+[![Docker Build Status](https://img.shields.io/docker/build/worenga/nine-mens-morris-challenge.svg?style=flat-square)](https://hub.docker.com/r/worenga/nine-mens-morris-challenge/builds/)
 
 [docker-image]: https://img.shields.io/docker/pulls/worenga/nine-mens-morris-app.svg
 [docker-url]: https://hub.docker.com/r/worenga/nine-mens-morris-app/
-
 [travis-image]: https://travis-ci.org/worenga/nine-mens-morris-challenge.svg?branch=master&style=flat-square
 [travis-url]: https://travis-ci.org/worenga/nine-mens-morris-challenge
-
+ 
 ## adesso / it-talents.de Code Competition Oktober 2017
 Autor: Benedikt Christoph Wolters <benedikt.wolters@rwth-aachen.de>
 
@@ -33,7 +32,7 @@ Das Spiel wird von Agenten gespielt. Im simplesten Fall ist ein Agent einfach ei
 
 Datenstruktur:
 Die Game Engine nutzt zur Representation der Spielfelder Bits in einer JavaScript Number.
-Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für jeden Spieler die Positionen auf dem Spielfeld separat. Dies ermoeglicht performante Operationen anhand von Bitmasken, sowie das Shiften von Bits bei der zur Symmetrieberechnung.
+Jede Position auf dem Spielfeld entspricht dabei einem Bit. Wir speichern für jeden Spieler die Positionen auf dem Spielfeld separat. Dies ermöglicht performante Operationen anhand von Bitmasken, sowie das Shiften von Bits bei der zur Symmetrieberechnung.
 
 ## Implementierte AI-Strategien
 
@@ -59,9 +58,10 @@ The Temporal Difference Algorithm](http://www.gm.fh-koeln.de/ciopwebpub/Kone15c.
 
 ## Live Demo
 
-Das bereitgestellte Docker Image wird auf der Amazon Cloud gehostet http://18.194.116.182:8099/ bzw. unter
+Das bereitgestellte Docker Image ~~wird auf der Amazon Cloud gehostet http://35.158.18.145:8099/ bzw.~~* unter
 https://morris.benedikt-wolters.de/ .
 
+*Anmerkung: Nach ueber 4 Monaten Auswertungzeit der Coding Challenge bin ich nicht laenger bereit die Kosten fuer ein EC2 Demo Hosting bereitzustellen.
 
 ## Installation
 
