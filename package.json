@@ -18,11 +18,10 @@
       }
     },
     "serve:app": {
-      "command":"pm2 start process.json --no-daemon",
-      "env":
-        {
-          "PM2_SERVE_PORT":"8099"
-        }
+      "command": "pm2 start process.json --no-daemon",
+      "env": {
+        "PM2_SERVE_PORT": "8099"
+      }
     }
   },
   "keywords": [
@@ -38,37 +37,37 @@
     "better-npm-run": "^0.1.0",
     "compass": "^0.1.1",
     "compass-mixins": "^0.12.10",
-    "css-loader": "^0.28.7",
+    "css-loader": "^0.28.11",
     "extract-text-webpack-plugin": "^3.0.2",
     "fabric-webpack": "^1.6.0-rc.1",
     "font-awesome": "^4.7.0",
-    "pm2": "^2.7.2",
+    "pm2": "^2.10.1",
     "synaptic": "^1.1.4",
     "task.js": "0.0.24",
-    "uglifyjs-webpack-plugin": "^1.0.1",
-    "vue": "^2.5.2",
-    "vue-loader": "^13.3.0",
+    "uglifyjs-webpack-plugin": "^1.2.4",
+    "vue": "^2.5.16",
+    "vue-loader": "^13.7.1",
     "vue-spinner": "^1.0.3",
-    "vue-template-compiler": "^2.5.2",
-    "webpack-dev-server": "^2.9.1"
+    "vue-template-compiler": "^2.5.16",
+    "webpack-dev-server": "^2.11.2"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
+    "babel-loader": "^7.1.4",
     "babel-plugin-transform-regenerator": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
-    "bulma": "^0.6.0",
-    "clean-webpack-plugin": "^0.1.17",
+    "bulma": "^0.6.2",
+    "clean-webpack-plugin": "^0.1.19",
     "command-line-args": "^4.0.7",
     "favicons-webpack-plugin": "0.0.7",
-    "file-loader": "^1.1.5",
+    "file-loader": "^1.1.11",
     "html-webpack-plugin": "^2.30.1",
     "json-loader": "^0.5.7",
-    "mocha": "^4.0.1",
-    "node-sass": "^4.5.3",
-    "sass-loader": "^6.0.6",
-    "webpack": "^3.8.1"
+    "mocha": "^4.1.0",
+    "node-sass": "^4.8.2",
+    "sass-loader": "^6.0.7",
+    "webpack": "^3.11.0"
   }
 }
